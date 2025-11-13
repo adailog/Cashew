@@ -52,7 +52,7 @@ Future<bool> initializeSettings() async {
         }
       });
       // Always reset the language/locale when restoring a backup
-      userSettings["locale"] = "zh"; // Changed from "System" to "zh" to ensure Chinese as default
+      userSettings["locale"] = "System"; 
       userSettings["databaseJustImported"] = false;
       print("Settings were restored");
     } catch (e) {
