@@ -459,12 +459,8 @@ class _SyncButtonState extends State<SyncButton> {
         padding: EdgeInsetsDirectional.zero,
         iconOnly: true,
         onTap: () async {
-          if (runningCloudFunctions == false) {
-            await runAllCloudFunctions(
-              context,
-              forceSignIn: true,
-            );
-          }
+          // 云同步功能已被禁用
+          print("云同步功能已被禁用");
         },
       ),
     );
@@ -477,14 +473,8 @@ class _SyncButtonState extends State<SyncButton> {
         child: Tappable(
           borderRadius: getPlatform() == PlatformOS.isIOS ? 10 : 50,
           onTap: () async {
-            if (runningCloudFunctions == false) {
-              refreshButtonKey.currentState?.startAnimation();
-              await runAllCloudFunctions(
-                context,
-                forceSignIn: true,
-              );
-              refreshButtonKey.currentState?.startAnimation();
-            }
+            // 云同步功能已被禁用
+            print("云同步功能已被禁用");
           },
           // Do not use Animated Switcher because otherwise duplicate key!
           child: appStateSettings["expandedNavigationSidebar"]
