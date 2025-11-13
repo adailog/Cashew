@@ -182,11 +182,6 @@ class MorePages extends StatelessWidget {
                           ),
                         )
                       : SizedBox.shrink(),
-              if (hasSideNavigation == false)
-                Expanded(
-                    child: GoogleAccountLoginButton(
-                  key: settingsGoogleAccountLoginButtonKey,
-                )),
             ],
           ),
           if (hasSideNavigation == false)
@@ -558,11 +553,6 @@ class SettingsPageContent extends StatelessWidget {
         ExportDB(),
 
         ImportDB(),
-
-        GoogleAccountLoginButton(
-          isOutlinedButton: false,
-          forceButtonName: "google-drive".tr(),
-        ),
       ],
     );
   }
