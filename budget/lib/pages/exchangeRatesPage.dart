@@ -15,7 +15,8 @@ import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
-import 'package:budget/widgets/toggle.dart';
+import 'package:budget/widgets/settingsContainers.dart';
+import 'package:budget/widgets/openSnackbar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/main.dart';
@@ -46,20 +47,23 @@ class _ExchangeRatesState extends State<ExchangeRates> {
     });
     
     if (success) {
-      showPopupMessage(
-        context,
-        "汇率更新成功",
-        icon: appStateSettings["outlinedIcons"]
-            ? Icons.check_circle_outline
-            : Icons.check_circle_rounded,
+      openSnackbar(
+        SnackbarMessage(
+          title: "汇率更新成功",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.check_circle_outline
+              : Icons.check_circle_rounded,
+        ),
       );
     } else {
-      showPopupMessage(
-        context,
-        "汇率更新失败，请检查网络连接",
-        icon: appStateSettings["outlinedIcons"]
-            ? Icons.error_outline
-            : Icons.error_rounded,
+      openSnackbar(
+        SnackbarMessage(
+          title: "汇率更新失败",
+          description: "请检查网络连接后重试",
+          icon: appStateSettings["outlinedIcons"]
+              ? Icons.error_outline
+              : Icons.error_rounded,
+        ),
       );
     }
   }
@@ -196,11 +200,12 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                         fontSize: 16,
                       ),
                     ),
-                    ToggleSwitch(
+                    Switch(
                       value: appStateSettings["autoUpdateExchangeRates"] ?? true,
                       onChanged: (value) {
-                        updateSettings("autoUpdateExchangeRates", value, updateGlobalState: false);
+                        updateSettings("autoUpdateExchangeRates", value, updateGlobalState: true);
                       },
+                      activeColor: Theme.of(context).colorScheme.primary,
                     ),
                   ],
                 ),
@@ -229,6 +234,12 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                     : appStateSettings["outlinedIcons"]
                         ? Icons.refresh_outlined
                         : Icons.refresh_rounded,
+                  color: isUpdating 
+                      ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
+                      : Theme.of(context).colorScheme.secondaryContainer,
+                  iconColor: isUpdating 
+                      ? Theme.of(context).colorScheme.onSecondaryContainer.withOpacity(0.5)
+                      : Theme.of(context).colorScheme.onSecondaryContainer,
                 ),
               ],
             ),
