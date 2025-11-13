@@ -588,7 +588,8 @@ class DebugPage extends StatelessWidget {
                   onTap: () async {
                     sharedPreferences.setString(
                         "dateOfLastSyncedWithClient", "{}");
-                    runAllCloudFunctions(context);
+                    // 云同步功能已被禁用
+                    print("云同步功能已被禁用");
                   }),
               SizedBox(height: 20),
               Button(
