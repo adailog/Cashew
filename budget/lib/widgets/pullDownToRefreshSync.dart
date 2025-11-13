@@ -12,12 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:timer_builder/timer_builder.dart';
 
 bool enableSwipeDownToRefresh(BuildContext context) {
-  return selectingTransactionsActive == 0 &&
-      runningCloudFunctions == false &&
-      appStateSettings["hasSignedIn"] != false &&
-      appStateSettings["backupSync"] == true &&
-      googleUser != null;
-  // && getIsFullScreen(context) == false;
+  // 云同步功能已被禁用
+  return false;
 }
 
 class PullDownToRefreshSync extends StatefulWidget {
@@ -130,10 +126,9 @@ class _PullDownToRefreshSyncState extends State<PullDownToRefreshSync>
   }
 
   _refreshSync() async {
+    // 云同步功能已被禁用
     _animationController.reverse();
-    if (runningCloudFunctions == false) {
-      await runAllCloudFunctions(context);
-    }
+    print("云同步功能已被禁用");
   }
 
   @override
