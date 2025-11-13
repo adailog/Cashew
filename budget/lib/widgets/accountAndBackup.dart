@@ -91,7 +91,7 @@ Future<bool> signInGoogle(
     SnackbarMessage(
       title: "功能已禁用".tr(),
       description: "Google登录和云服务功能已被禁用".tr(),
-      icon: appStateSettings["outlinedIcons"]
+      icon: appStateSettings["outlinedIcons"] == true
           ? Icons.info_outlined
           : Icons.info_rounded,
     ),
@@ -146,11 +146,12 @@ Future<bool> signInAndSync(BuildContext context,
       waitForCompletion: false,
       next: next,
     );
-    if (appStateSettings["username"] == "" && googleUser != null) {
-      await updateSettings("username", googleUser?.displayName ?? "",
+    // Google用户登录功能已禁用
+    if (appStateSettings["username"] == "" && false) {
+      await updateSettings("username", "",
           pagesNeedingRefresh: [0], updateGlobalState: false);
     }
-    if (googleUser != null) {
+    if (false) {
       loadingIndeterminateKey.currentState?.setVisibility(true);
       await syncData(context);
       loadingIndeterminateKey.currentState?.setVisibility(true);
@@ -192,14 +193,15 @@ Future<void> createBackupInBackground(context) async {
       print("auto backing up");
 
       bool hasSignedIn = false;
-      if (googleUser == null) {
+      // Google用户登录功能已禁用
+      if (false) {
         hasSignedIn = await signInGoogle(
             context: context,
             gMailPermissions: false,
             waitForCompletion: false,
             silentSignIn: true);
       } else {
-        hasSignedIn = true;
+        hasSignedIn = false;
       }
       if (hasSignedIn == false) {
         return;
@@ -272,9 +274,9 @@ Future<void> createBackup(
       SnackbarMessage(
         title: "功能已禁用".tr(),
         description: "云备份功能已被禁用，请使用本地导出功能".tr(),
-        icon: appStateSettings["outlinedIcons"]
-            ? Icons.info_outlined
-            : Icons.info_rounded,
+        icon: appStateSettings["outlinedIcons"] == true
+          ? Icons.info_outlined
+          : Icons.info_rounded,
       ),
     );
   }
@@ -289,7 +291,7 @@ Future<void> deleteRecentBackups(context, amountToKeep,
       SnackbarMessage(
         title: "功能已禁用".tr(),
         description: "云备份删除功能已被禁用".tr(),
-        icon: appStateSettings["outlinedIcons"]
+        icon: appStateSettings["outlinedIcons"] == true
             ? Icons.info_outlined
             : Icons.info_rounded,
       ),
@@ -335,7 +337,7 @@ Future<void> loadBackup(
     SnackbarMessage(
       title: "功能已禁用".tr(),
       description: "云备份加载功能已被禁用".tr(),
-      icon: appStateSettings["outlinedIcons"]
+      icon: appStateSettings["outlinedIcons"] == true
           ? Icons.info_outlined
           : Icons.info_rounded,
     ),
@@ -382,7 +384,7 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
       SnackbarMessage(
         title: "功能已禁用".tr(),
         description: "Google登录和云同步功能已被禁用".tr(),
-        icon: appStateSettings["outlinedIcons"]
+        icon: appStateSettings["outlinedIcons"] == true
             ? Icons.info_outlined
             : Icons.info_rounded,
       ),
@@ -405,9 +407,9 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
                     SnackbarMessage(
                       title: "功能已禁用".tr(),
                       description: "云备份功能已被禁用".tr(),
-                      icon: appStateSettings["outlinedIcons"]
-                          ? Icons.info_outlined
-                          : Icons.info_rounded,
+                      icon: appStateSettings["outlinedIcons"] == true
+              ? Icons.info_outlined
+              : Icons.info_rounded,
                     ),
                   );
                 },
@@ -422,9 +424,9 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
                     SnackbarMessage(
                       title: "功能已禁用".tr(),
                       description: "Google登录功能已被禁用".tr(),
-                      icon: appStateSettings["outlinedIcons"]
-                          ? Icons.info_outlined
-                          : Icons.info_rounded,
+                      icon: appStateSettings["outlinedIcons"] == true
+            ? Icons.info_outlined
+            : Icons.info_rounded,
                     ),
                   );
                 },
@@ -441,9 +443,9 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
                 SnackbarMessage(
                   title: "功能已禁用".tr(),
                   description: "云备份功能已被禁用".tr(),
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.info_outlined
-                      : Icons.info_rounded,
+                  icon: appStateSettings["outlinedIcons"] == true
+              ? Icons.info_outlined
+              : Icons.info_rounded,
                 ),
               );
             },
@@ -475,7 +477,7 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
                 openPage: AccountsPage(),
                 title: widget.forceButtonName ?? googleUser!.displayName ?? "",
                 icon: widget.forceButtonName == null
-                    ? appStateSettings["outlinedIcons"]
+                    ? appStateSettings["outlinedIcons"] == true
                         ? Icons.person_outlined
                         : Icons.person_rounded
                     : MoreIcons.google_drive,
@@ -485,13 +487,13 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
   }
 }
 
-Future<(drive.DriveApi? driveApi, List<drive.File>?)> getDriveFiles() async {
+Future<(Map<String, dynamic>?, List<Map<String, dynamic>>?)> getDriveFiles() async {
   // Google Drive功能已禁用
   openSnackbar(
     SnackbarMessage(
       title: "功能已禁用".tr(),
       description: "Google Drive功能已被禁用".tr(),
-      icon: appStateSettings["outlinedIcons"]
+      icon: appStateSettings["outlinedIcons"] == true
           ? Icons.info_outlined
           : Icons.info_rounded,
     ),
@@ -516,7 +518,7 @@ class BackupManagement extends StatefulWidget {
 }
 
 class _BackupManagementState extends State<BackupManagement> {
-  List<drive.File> filesState = [];
+  List<Map<String, dynamic>> filesState = [];
   List<int> deletedIndices = [];
   UniqueKey dropDownKey = UniqueKey();
   bool isLoading = false;
@@ -545,7 +547,7 @@ class _BackupManagementState extends State<BackupManagement> {
           AboutInfoBox(
             title: "功能已禁用".tr(),
             description: "Google Drive备份功能已被禁用".tr(),
-            color: appStateSettings["materialYou"]
+            color: appStateSettings["materialYou"] == true
                 ? Theme.of(context).colorScheme.secondaryContainer
                 : getColor(context, "lightDarkAccentHeavyLight"),
             padding: EdgeInsetsDirectional.only(
@@ -555,152 +557,6 @@ class _BackupManagementState extends State<BackupManagement> {
               top: 5,
             ),
           ),
-        ],
-      ),
-    );
-  }
-                (MapEntry<int, drive.File> file) => SizedBox.shrink(),
-                                                      .only(start: 5),
-                                              child: ButtonIcon(
-                                                color: appStateSettings[
-                                                        "materialYou"]
-                                                    ? Theme.of(context)
-                                                        .colorScheme
-                                                        .onSecondaryContainer
-                                                        .withOpacity(0.08)
-                                                    : getColor(context,
-                                                            "lightDarkAccentHeavy")
-                                                        .withOpacity(0.7),
-                                                onTap: () {
-                                                  openPopup(
-                                                    context,
-                                                    icon: appStateSettings[
-                                                            "outlinedIcons"]
-                                                        ? Icons.delete_outlined
-                                                        : Icons.delete_rounded,
-                                                    title: "delete-backup".tr(),
-                                                    subtitle:
-                                                        getWordedDateShortMore(
-                                                              (file.value.modifiedTime ??
-                                                                      DateTime
-                                                                          .now())
-                                                                  .toLocal(),
-                                                              includeTime: true,
-                                                              includeYear: true,
-                                                              showTodayTomorrow:
-                                                                  false,
-                                                            ) +
-                                                            "\n" +
-                                                            getWordedTime(
-                                                                navigatorKey
-                                                                    .currentContext
-                                                                    ?.locale
-                                                                    .toString(),
-                                                                (file.value.modifiedTime ??
-                                                                        DateTime
-                                                                            .now())
-                                                                    .toLocal()),
-                                                    beforeDescriptionWidget:
-                                                        Padding(
-                                                      padding:
-                                                          const EdgeInsetsDirectional
-                                                              .only(
-                                                        top: 8,
-                                                        bottom: 5,
-                                                      ),
-                                                      child: CodeBlock(
-                                                        text: (file.value
-                                                                    .name ??
-                                                                "No name") +
-                                                            "\n" +
-                                                            convertBytesToMB(file
-                                                                        .value
-                                                                        .size ??
-                                                                    "0")
-                                                                .toStringAsFixed(
-                                                                    2) +
-                                                            " MB",
-                                                      ),
-                                                    ),
-                                                    description: (widget
-                                                            .isClientSync
-                                                        ? "delete-sync-backup-warning"
-                                                            .tr()
-                                                        : null),
-                                                    onSubmit: () async {
-                                                      popRoute(context);
-                                                      loadingIndeterminateKey
-                                                          .currentState
-                                                          ?.setVisibility(true);
-                                                      await deleteBackup(
-                                                          driveApiState,
-                                                          file.value.id ?? "");
-                                                      openSnackbar(
-                                                        SnackbarMessage(
-                                                            title:
-                                                                "deleted-backup"
-                                                                    .tr(),
-                                                            description: (file
-                                                                    .value
-                                                                    .name ??
-                                                                "No name"),
-                                                            icon: Icons
-                                                                .delete_rounded),
-                                                      );
-                                                      setState(() {
-                                                        deletedIndices
-                                                            .add(file.key);
-                                                      });
-                                                      // bottomSheetControllerGlobal
-                                                      //     .snapToExtent(0);
-                                                      if (widget.isClientSync)
-                                                        await updateSettings(
-                                                            "devicesHaveBeenSynced",
-                                                            appStateSettings[
-                                                                    "devicesHaveBeenSynced"] -
-                                                                1,
-                                                            updateGlobalState:
-                                                                false);
-                                                      if (widget.isManaging) {
-                                                        await updateSettings(
-                                                            "numBackups",
-                                                            appStateSettings[
-                                                                    "numBackups"] -
-                                                                1,
-                                                            updateGlobalState:
-                                                                false);
-                                                      }
-                                                      loadingIndeterminateKey
-                                                          .currentState
-                                                          ?.setVisibility(
-                                                              false);
-                                                    },
-                                                    onSubmitLabel:
-                                                        "delete".tr(),
-                                                    onCancel: () {
-                                                      popRoute(context);
-                                                    },
-                                                    onCancelLabel:
-                                                        "cancel".tr(),
-                                                  );
-                                                },
-                                                icon: appStateSettings[
-                                                        "outlinedIcons"]
-                                                    ? Icons.close_outlined
-                                                    : Icons.close_rounded,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : SizedBox.shrink(),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                ),
-              )
-              .toList(),
         ],
       ),
     );
@@ -733,10 +589,10 @@ class LoadingShimmerDriveFiles extends StatelessWidget {
     return Shimmer.fromColors(
       period:
           Duration(milliseconds: (1000 + randomDouble[i % 10] * 520).toInt()),
-      baseColor: appStateSettings["materialYou"]
+      baseColor: appStateSettings["materialYou"] == true
           ? Theme.of(context).colorScheme.secondaryContainer
           : getColor(context, "lightDarkAccentHeavyLight"),
-      highlightColor: appStateSettings["materialYou"]
+      highlightColor: appStateSettings["materialYou"] == true
           ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.2)
           : getColor(context, "lightDarkAccentHeavy").withAlpha(20),
       child: Padding(
@@ -744,7 +600,7 @@ class LoadingShimmerDriveFiles extends StatelessWidget {
         child: Tappable(
           onTap: () {},
           borderRadius: 15,
-          color: appStateSettings["materialYou"]
+          color: appStateSettings["materialYou"] == true
               ? Theme.of(context)
                   .colorScheme
                   .secondaryContainer
@@ -759,7 +615,7 @@ class LoadingShimmerDriveFiles extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          appStateSettings["outlinedIcons"]
+                          appStateSettings["outlinedIcons"] == true
                               ? Icons.description_outlined
                               : Icons.description_rounded,
                           color: Theme.of(context).colorScheme.secondary,
@@ -801,13 +657,13 @@ class LoadingShimmerDriveFiles extends StatelessWidget {
                           children: [
                             ButtonIcon(
                                 onTap: () {},
-                                icon: appStateSettings["outlinedIcons"]
-                                    ? Icons.close_outlined
-                                    : Icons.close_rounded),
+                                icon: appStateSettings["outlinedIcons"] == true
+                              ? Icons.close_outlined
+                              : Icons.close_rounded),
                             SizedBox(width: 5),
                             ButtonIcon(
                                 onTap: () {},
-                                icon: appStateSettings["outlinedIcons"]
+                                icon: appStateSettings["outlinedIcons"] == true
                                     ? Icons.close_outlined
                                     : Icons.close_rounded),
                           ],
@@ -824,8 +680,8 @@ class LoadingShimmerDriveFiles extends StatelessWidget {
 // Google Drive功能已被禁用 - saveDriveFileToDevice函数已移除
 Future<bool> saveDriveFileToDevice({
   required BuildContext boxContext,
-  required drive.DriveApi driveApi,
-  required drive.File fileToSave,
+  required Map<String, dynamic> driveApi,
+  required Map<String, dynamic> fileToSave,
 }) async {
   print("Google Drive功能已被禁用，无法下载文件");
   return false;
