@@ -111,14 +111,12 @@ class InitialPageRouteNavigator extends StatelessWidget {
               );
             }
           },
-          child: appStateSettings["hasOnboarded"] != true
-              ? OnBoardingPage(key: ValueKey("Onboarding"))
-              : PageNavigationFrameworkSafeArea(
-                  child: PageNavigationFramework(
-                    key: pageNavigationFrameworkKey,
-                    widthSideNavigationBar: getWidthNavigationSidebar(context),
-                  ),
-                ),
+          child: PageNavigationFrameworkSafeArea(
+            child: PageNavigationFramework(
+              key: pageNavigationFrameworkKey,
+              widthSideNavigationBar: getWidthNavigationSidebar(context),
+            ),
+          ),
         ),
       ),
     );
