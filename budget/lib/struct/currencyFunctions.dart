@@ -52,10 +52,10 @@ Future<bool> getExchangeRates({bool forceUpdate = false}) async {
       });
       
       // 保存更新后的汇率
-      await updateSettings("cachedCurrencyExchange", cachedCurrencyExchange);
+      await updateSettings("cachedCurrencyExchange", cachedCurrencyExchange, updateGlobalState: false);
       
       // 更新最后更新时间
-      await updateSettings("lastExchangeRateUpdate", DateTime.now().toString());
+      await updateSettings("lastExchangeRateUpdate", DateTime.now().toString(), updateGlobalState: false);
       
       print("汇率数据已更新");
       return true;
