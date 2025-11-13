@@ -94,6 +94,13 @@ class _CheckWidgetLaunchState extends State<CheckWidgetLaunch> {
           wallet: null,
         ),
       );
+    } else if (widgetPayload == "monthlyExpenseLaunchWidget") {
+      pushRoute(
+        context,
+        WalletDetailsPage(
+          wallet: null,
+        ),
+      );
     }
   }
 
@@ -124,6 +131,7 @@ Future updateWidgetColorsAndText(BuildContext context) async {
             : Theme.of(context);
 
     await HomeWidget.saveWidgetData<String>('netWorthTitle', "net-worth".tr());
+    await HomeWidget.saveWidgetData<String>('monthlyExpenseTitle', "monthly-expense".tr());
     await HomeWidget.saveWidgetData<String>(
       'widgetColorBackground',
       colorToHex(widgetTheme.colorScheme.secondaryContainer),
@@ -155,6 +163,9 @@ Future updateWidgetColorsAndText(BuildContext context) async {
     await HomeWidget.updateWidget(
       name: 'TransferWidgetProvider',
     );
+    await HomeWidget.updateWidget(
+      name: 'MonthlyExpenseWidgetProvider',
+    );
   });
 
   return;
@@ -182,47 +193,95 @@ class RenderHomePageWidgetsState extends State<RenderHomePageWidgets> {
             (snapshot.data ?? []).map((item) => item.walletPk).toList();
         if (walletPks.length <= 0 ||
             appStateSettings["netWorthAllWallets"] == true) walletPks = null;
-        return Container(
-          child: StreamBuilder<TotalWithCount?>(
-            stream: database.watchTotalWithCountOfWallet(
-              isIncome: null,
-              allWallets: Provider.of<AllWallets>(context),
-              followCustomPeriodCycle: true,
-              cycleSettingsExtension: "NetWorth",
-              searchFilters: SearchFilters(walletPks: walletPks ?? []),
-            ),
-            builder: (context, snapshot) {
-              Future.delayed(Duration.zero, () async {
-                int totalCount = snapshot.data?.count ?? 0;
-                String netWorthTransactionsNumber = totalCount.toString() +
-                    " " +
-                    (totalCount == 1
-                        ? "transaction".tr().toLowerCase()
-                        : "transactions".tr().toLowerCase());
-                double totalSpent = snapshot.data?.total ?? 0;
-                String netWorthAmount = convertToMoney(
-                  Provider.of<AllWallets>(context, listen: false),
-                  totalSpent,
-                );
-                await HomeWidget.saveWidgetData<String>(
-                  'netWorthAmount',
-                  netWorthAmount,
-                );
-                await HomeWidget.saveWidgetData<String>(
-                  'netWorthTransactionsNumber',
-                  netWorthTransactionsNumber,
-                );
-                await HomeWidget.updateWidget(
-                  name: 'NetWorthWidgetProvider',
-                );
-                await HomeWidget.updateWidget(
-                  name: 'NetWorthPlusWidgetProvider',
-                );
-              });
+        return Column(
+          children: [
+            // Net worth widget data update
+            StreamBuilder<TotalWithCount?>(
+              stream: database.watchTotalWithCountOfWallet(
+                isIncome: null,
+                allWallets: Provider.of<AllWallets>(context),
+                followCustomPeriodCycle: true,
+                cycleSettingsExtension: "NetWorth",
+                searchFilters: SearchFilters(walletPks: walletPks ?? []),
+              ),
+              builder: (context, snapshot) {
+                Future.delayed(Duration.zero, () async {
+                  int totalCount = snapshot.data?.count ?? 0;
+                  String netWorthTransactionsNumber = totalCount.toString() +
+                      " " +
+                      (totalCount == 1
+                          ? "transaction".tr().toLowerCase()
+                          : "transactions".tr().toLowerCase());
+                  double totalSpent = snapshot.data?.total ?? 0;
+                  String netWorthAmount = convertToMoney(
+                    Provider.of<AllWallets>(context, listen: false),
+                    totalSpent,
+                  );
+                  await HomeWidget.saveWidgetData<String>(
+                    'netWorthAmount',
+                    netWorthAmount,
+                  );
+                  await HomeWidget.saveWidgetData<String>(
+                    'netWorthTransactionsNumber',
+                    netWorthTransactionsNumber,
+                  );
+                  await HomeWidget.updateWidget(
+                    name: 'NetWorthWidgetProvider',
+                  );
+                  await HomeWidget.updateWidget(
+                    name: 'NetWorthPlusWidgetProvider',
+                  );
+                });
 
-              return const SizedBox.shrink();
-            },
-          ),
+                return const SizedBox.shrink();
+              },
+            ),
+            // Monthly expense widget data update
+            StreamBuilder<TotalWithCount?>(
+              stream: database.watchTotalWithCountOfWallet(
+                isIncome: false, // Filter for expenses only
+                allWallets: Provider.of<AllWallets>(context),
+                startDate: DateTime.now().firstDayOfMonth(),
+                forcedDateTimeRange: DateTimeRange(
+                  start: DateTime.now().firstDayOfMonth(),
+                  end: DateTime.now().lastDayOfMonth(),
+                ),
+                followCustomPeriodCycle: false,
+                searchFilters: SearchFilters(expenseIncome: [ExpenseIncome.expense]),
+              ),
+              builder: (context, snapshotExpense) {
+                Future.delayed(Duration.zero, () async {
+                  int totalCount = snapshotExpense.data?.count ?? 0;
+                  String monthlyExpenseTransactionsNumber = totalCount.toString() +
+                      " " +
+                      (totalCount == 1
+                          ? "transaction".tr().toLowerCase()
+                          : "transactions".tr().toLowerCase());
+                  double totalExpense = snapshotExpense.data?.total ?? 0;
+                  // Ensure it shows as positive amount for display
+                  double displayExpense = totalExpense.abs();
+                  String monthlyExpenseAmount = convertToMoney(
+                    Provider.of<AllWallets>(context, listen: false),
+                    displayExpense,
+                  );
+                  
+                  await HomeWidget.saveWidgetData<String>(
+                    'monthlyExpenseAmount',
+                    monthlyExpenseAmount,
+                  );
+                  await HomeWidget.saveWidgetData<String>(
+                    'monthlyExpenseTransactionsNumber',
+                    monthlyExpenseTransactionsNumber,
+                  );
+                  await HomeWidget.updateWidget(
+                    name: 'MonthlyExpenseWidgetProvider',
+                  );
+                });
+
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
         );
       },
     );
