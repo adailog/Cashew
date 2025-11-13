@@ -6,11 +6,11 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
-import androidx.core.graphics.ColorUtils
+import java.util.Calendar
+import com.budget.tracker_app.MainActivity
+import es.antonborri.home_widget.HomeWidgetBackgroundIntent
 import es.antonborri.home_widget.HomeWidgetLaunchIntent
 import es.antonborri.home_widget.HomeWidgetProvider
-
-import es.antonborri.home_widget.R
 
 class MonthlyExpenseWidgetProvider : HomeWidgetProvider() {
 
@@ -19,15 +19,23 @@ class MonthlyExpenseWidgetProvider : HomeWidgetProvider() {
 
             val views = RemoteViews(context.packageName, R.layout.monthly_expense_widget_layout).apply {
                 try {
-                  setTextViewText(R.id.monthly_expense_title, widgetData.getString("monthlyExpenseTitle", null)
-                  ?: "Monthly Expense")
+                  // 获取当前月份的中文名称
+                  val calendar = Calendar.getInstance()
+                  val monthNames = arrayOf("一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月")
+                  val currentMonth = monthNames[calendar.get(Calendar.MONTH)]
+                  
+                  // 直接设置正确的标题，不依赖任何可能失败的数据
+                  setTextViewText(R.id.monthly_expense_title, "${currentMonth}支出")
 
                   setTextViewText(R.id.monthly_expense_amount, widgetData.getString("monthlyExpenseAmount", null)
                   ?: "0.00")
 
                   setTextViewText(R.id.monthly_expense_transactions_number, widgetData.getString("monthlyExpenseTransactionsNumber", null)
                   ?: "0 transactions")
-                }catch (e: Exception){}
+                }catch (e: Exception) {
+                  // 设置默认标题作为后备
+                  setTextViewText(R.id.monthly_expense_title, "本月支出")
+                }
 
                 try {
                   setInt(R.id.widget_background, "setColorFilter",  android.graphics.Color.parseColor(widgetData.getString("widgetColorBackground", null)
@@ -52,7 +60,7 @@ class MonthlyExpenseWidgetProvider : HomeWidgetProvider() {
                   val pendingIntentWithData = HomeWidgetLaunchIntent.getActivity(
                           context,
                           MainActivity::class.java,
-                          Uri.parse("monthlyExpenseLaunchWidget"))
+                          Uri.parse("addTransactionWidget"))
                   setOnClickPendingIntent(R.id.widget_container, pendingIntentWithData)
                 }catch (e: Exception){}
 
@@ -62,3 +70,4 @@ class MonthlyExpenseWidgetProvider : HomeWidgetProvider() {
         }
     }
 }
+
