@@ -469,9 +469,9 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                           next: () {},
                         );
                         if (appStateSettings["username"] == "" &&
-                            googleUser != null) {
+                            false) {
                           updateSettings(
-                              "username", googleUser?.displayName ?? "",
+                              "username", "",
                               pagesNeedingRefresh: [0],
                               updateGlobalState: false);
                         }
@@ -497,7 +497,7 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
                         // }
                         // if (result == true) {
                         //   chooseBackup(context, hideDownloadButton: true);
-                        // } else if (result == false && googleUser != null) {
+                        // } else if (result == false && false) {
                         //   openLoadingPopup(context);
                         //   // set this to true so cloud functions run
                         //   entireAppLoaded = true;
