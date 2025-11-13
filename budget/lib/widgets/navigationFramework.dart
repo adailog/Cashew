@@ -287,8 +287,6 @@ GlobalKey<UpcomingOverdueTransactionsState>
 GlobalKey<CreditDebtTransactionsState> creditDebtTransactionsKey = GlobalKey();
 // GlobalKey<ProductsState> purchasesStateKey = GlobalKey(); // Removed Pro related code
 GlobalKey<AccountsPageState> accountsPageStateKey = GlobalKey();
-GlobalKey<GoogleAccountLoginButtonState> settingsGoogleAccountLoginButtonKey =
-    GlobalKey();
 GlobalKey<NavigationSidebarState> sidebarStateKey = GlobalKey();
 GlobalKey<GlobalLoadingProgressState> loadingProgressKey = GlobalKey();
 GlobalKey<GlobalLoadingIndeterminateState> loadingIndeterminateKey =
