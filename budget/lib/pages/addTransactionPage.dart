@@ -14,11 +14,8 @@ import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/navBarIconsData.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/upcomingTransactionsFunctions.dart';
-import 'package:budget/struct/uploadAttachment.dart';
 import 'package:budget/widgets/accountAndBackup.dart';
 import 'package:budget/widgets/navigationFramework.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/categoryIcon.dart';
 import 'package:budget/widgets/dropdownSelect.dart';
@@ -54,7 +51,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:budget/colors.dart';
 import 'package:flutter/services.dart' hide TextInput;
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:budget/widgets/util/showTimePicker.dart';
 import 'package:budget/widgets/framework/pageFramework.dart';
@@ -4114,103 +4110,6 @@ class ReorderCategoriesPopup extends StatelessWidget {
   }
 }
 
-String? getFileIdFromUrl(String url) {
-  RegExp regExp = RegExp(r"/d/([a-zA-Z0-9_-]+)");
-  Match? match = regExp.firstMatch(url);
-  if (match != null && match.groupCount >= 1) {
-    return match.group(1)!;
-  } else {
-    return null;
-  }
-}
-
-Future<List<int>?> getGoogleDriveFileImageData(String url) async {
-  dynamic result = await openLoadingPopupTryCatch(
-    () async {
-      String? fileId = getFileIdFromUrl(url);
-      if (fileId == null) throw ("No file id found!");
-
-      if (googleUser == null) {
-        await signInGoogle(drivePermissionsAttachments: true);
-      }
-
-      final authHeaders = await googleUser!.authHeaders;
-      final authenticateClient = GoogleAuthClient(authHeaders);
-      drive.DriveApi driveApi = drive.DriveApi(authenticateClient);
-
-      List<int> dataStore = [];
-
-      drive.File fileMetadata =
-          await driveApi.files.get(fileId, $fields: 'size') as drive.File;
-      int totalBytes = int.parse(fileMetadata.size ?? "0");
-
-      dynamic response = await driveApi.files
-          .get(fileId, downloadOptions: drive.DownloadOptions.fullMedia);
-
-      num receivedBytes = 0;
-
-      loadingProgressKey.currentState?.setProgressPercentage(0);
-
-      await for (var data in response.stream) {
-        dataStore.insertAll(dataStore.length, data);
-        receivedBytes += data.length;
-        double progress = receivedBytes / totalBytes;
-        loadingProgressKey.currentState?.setProgressPercentage(progress);
-      }
-      loadingProgressKey.currentState?.setProgressPercentage(0);
-      return dataStore;
-    },
-    onError: (error) {
-      loadingProgressKey.currentState?.setProgressPercentage(0);
-      print(error);
-    },
-  );
-  if (result is List<int>) return result;
-  return null;
-}
-
-class RenderImageData extends StatelessWidget {
-  const RenderImageData(
-      {required this.imageData, required this.openLinkOnError, super.key});
-  final List<int>? imageData;
-  final VoidCallback openLinkOnError;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onLongPress: () {
-        openLinkOnError();
-      },
-      child: Image.memory(
-        Uint8List.fromList(imageData ?? []),
-        errorBuilder: (context, error, stackTrace) => Center(
-          child: Tappable(
-            onTap: openLinkOnError,
-            color: Colors.transparent,
-            borderRadius: 15,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.symmetric(
-                  horizontal: 20, vertical: 25),
-              child: Column(
-                children: [
-                  TextFont(
-                    fontSize: 18,
-                    text: "failed-to-preview-image".tr(),
-                    textAlign: TextAlign.center,
-                    maxLines: 4,
-                  ),
-                  SizedBox(height: 15),
-                  LowKeyButton(onTap: openLinkOnError, text: "open-link".tr()),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class LinkInNotes extends StatelessWidget {
   const LinkInNotes({
     required this.link,
@@ -4289,39 +4188,6 @@ class TransactionNotesTextInput extends StatefulWidget {
 
 class _TransactionNotesTextInputState extends State<TransactionNotesTextInput> {
   bool notesInputFocused = false;
-  late List<String> extractedLinks =
-      extractLinks(widget.noteInputController.text);
-
-  void addAttachmentLinkToNote(String? link) {
-    if (link == null) return;
-    String noteUpdated = widget.noteInputController.text +
-        (widget.noteInputController.text == "" ? "" : "\n") +
-        (link) +
-        " ";
-
-    widget.setSelectedNoteController(noteUpdated);
-    updateExtractedLinks(noteUpdated);
-  }
-
-  void removeLinkFromNote(String link) {
-    String originalText = widget.noteInputController.text;
-    String noteUpdated =
-        widget.noteInputController.text.replaceAll(link + " ", "");
-    if (noteUpdated == originalText) {
-      noteUpdated = widget.noteInputController.text.replaceAll(link + "\n", "");
-    }
-    widget.setSelectedNoteController(noteUpdated);
-    updateExtractedLinks(noteUpdated);
-  }
-
-  void updateExtractedLinks(String text) {
-    List<String> newlyExtractedLinks = extractLinks(text);
-    if (newlyExtractedLinks.toString() != extractedLinks.toString()) {
-      setState(() {
-        extractedLinks = newlyExtractedLinks;
-      });
-    }
-  }
 
   @override
   void initState() {
@@ -4336,7 +4202,7 @@ class _TransactionNotesTextInputState extends State<TransactionNotesTextInput> {
   }
 
   void _printLatestValue() {
-    updateExtractedLinks(widget.noteInputController.text);
+    // Nothing to do here
   }
 
   @override
@@ -4363,7 +4229,6 @@ class _TransactionNotesTextInputState extends State<TransactionNotesTextInput> {
               minLines: 3,
               onChanged: (text) async {
                 widget.setSelectedNoteController(text, setInput: false);
-                updateExtractedLinks(text);
               },
             ),
             onFocusChange: (hasFocus) {
@@ -4386,228 +4251,6 @@ class _TransactionNotesTextInputState extends State<TransactionNotesTextInput> {
                     inverse: true,
                   )
                 : getColor(context, "lightDarkAccent"),
-          ),
-          LinkInNotes(
-            color: (appStateSettings["materialYou"]
-                ? Theme.of(context).colorScheme.secondaryContainer
-                : getColor(context, "canvasContainer")),
-            link: "add-attachment".tr(),
-            iconData: appStateSettings["outlinedIcons"]
-                ? Icons.attachment_outlined
-                : Icons.attachment_rounded,
-            iconDataAfter: appStateSettings["outlinedIcons"]
-                ? Icons.add_outlined
-                : Icons.add_rounded,
-            onTap: () async {
-              openBottomSheet(
-                context,
-                // We need to use the custom controller because the ask for title popup uses the default controller
-                // Which we need to control separately
-                useCustomController: true,
-                reAssignBottomSheetControllerGlobal: false,
-                PopupFramework(
-                  title: "add-attachment".tr().capitalizeFirstofEach,
-                  subtitle: "add-attachment-description".tr(),
-                  child: Column(
-                    children: [
-                      if (kIsWeb == false)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(bottom: 13),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButtonStacked(
-                                  filled: false,
-                                  alignStart: true,
-                                  alignBeside: true,
-                                  padding: EdgeInsetsDirectional.symmetric(
-                                      horizontal: 20, vertical: 20),
-                                  text: "take-photo".tr(),
-                                  iconData: appStateSettings["outlinedIcons"]
-                                      ? Icons.camera_alt_outlined
-                                      : Icons.camera_alt_rounded,
-                                  onTap: () async {
-                                    popRoute(context);
-                                    if (await checkLockedFeatureIfInDemoMode(
-                                            context) ==
-                                        true) {
-                                      String? result = await getPhotoAndUpload(
-                                          source: ImageSource.camera);
-                                      if (result != null)
-                                        addAttachmentLinkToNote(result);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (kIsWeb == false)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(bottom: 13),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: OutlinedButtonStacked(
-                                  filled: false,
-                                  alignStart: true,
-                                  alignBeside: true,
-                                  padding: EdgeInsetsDirectional.symmetric(
-                                      horizontal: 20, vertical: 20),
-                                  text: "select-photo".tr(),
-                                  iconData: appStateSettings["outlinedIcons"]
-                                      ? Icons.photo_library_outlined
-                                      : Icons.photo_library_rounded,
-                                  onTap: () async {
-                                    popRoute(context);
-                                    if (await checkLockedFeatureIfInDemoMode(
-                                            context) ==
-                                        true) {
-                                      String? result = await getPhotoAndUpload(
-                                          source: ImageSource.gallery);
-                                      addAttachmentLinkToNote(result);
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(bottom: 13),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButtonStacked(
-                                filled: false,
-                                alignStart: true,
-                                alignBeside: true,
-                                padding: EdgeInsetsDirectional.symmetric(
-                                    horizontal: 20, vertical: 20),
-                                text: "select-file".tr(),
-                                iconData: appStateSettings["outlinedIcons"]
-                                    ? Icons.file_open_outlined
-                                    : Icons.file_open_rounded,
-                                onTap: () async {
-                                  popRoute(context);
-                                  if (await checkLockedFeatureIfInDemoMode(
-                                          context) ==
-                                      true) {
-                                    String? result = await getFileAndUpload();
-                                    addAttachmentLinkToNote(result);
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          AnimatedSizeSwitcher(
-            child: extractedLinks.length <= 0
-                ? Container(
-                    key: ValueKey(1),
-                  )
-                : Column(
-                    children: [
-                      for (String link in extractedLinks)
-                        LinkInNotes(
-                          link: link,
-                          onLongPress: () {
-                            copyToClipboard(link);
-                          },
-                          onTap: () async {
-                            openUrl(link);
-                          },
-                          extraWidget: Row(
-                            children: [
-                              if (link.contains("drive.google.com"))
-                                Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                      end: 3, start: 5),
-                                  child: IconButtonScaled(
-                                    iconData: appStateSettings["outlinedIcons"]
-                                        ? Icons.photo_outlined
-                                        : Icons.photo_rounded,
-                                    iconSize: 16,
-                                    scale: 1.6,
-                                    onTap: () async {
-                                      List<int>? result =
-                                          await getGoogleDriveFileImageData(
-                                              link);
-                                      if (result == null) {
-                                        openUrl(link);
-                                      } else {
-                                        openBottomSheet(
-                                          context,
-                                          PopupFramework(
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadiusDirectional
-                                                      .circular(getPlatform() ==
-                                                              PlatformOS.isIOS
-                                                          ? 10
-                                                          : 15),
-                                              child: RenderImageData(
-                                                imageData: result,
-                                                openLinkOnError: () {
-                                                  openUrl(link);
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                        // Update the size of the bottom sheet
-                                        Future.delayed(
-                                            Duration(milliseconds: 300), () {
-                                          bottomSheetControllerGlobal
-                                              .snapToExtent(0);
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-                              Padding(
-                                padding: const EdgeInsetsDirectional.only(
-                                    end: 11, start: 5),
-                                child: IconButtonScaled(
-                                  iconData: appStateSettings["outlinedIcons"]
-                                      ? Icons.remove_outlined
-                                      : Icons.remove_rounded,
-                                  iconSize: 16,
-                                  scale: 1.6,
-                                  onTap: () {
-                                    openPopup(
-                                      context,
-                                      icon: appStateSettings["outlinedIcons"]
-                                          ? Icons.link_off_outlined
-                                          : Icons.link_off_rounded,
-                                      title: "remove-link-question".tr(),
-                                      description:
-                                          "remove-link-description".tr(),
-                                      onCancel: () {
-                                        popRoute(context);
-                                      },
-                                      onCancelLabel: "cancel".tr(),
-                                      onSubmit: () {
-                                        removeLinkFromNote(link);
-                                        popRoute(context);
-                                      },
-                                      onSubmitLabel: "remove".tr(),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
           ),
         ],
       ),
