@@ -17,6 +17,7 @@ import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:budget/widgets/settingsContainers.dart';
 import 'package:budget/widgets/openSnackbar.dart';
+import 'package:budget/widgets/globalSnackbar.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/main.dart';
@@ -219,27 +220,44 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                   ),
                 SizedBox(height: 10),
                 // 手动更新按钮
-                ButtonIcon(
-                  onTap: isUpdating ? null : updateExchangeRates,
-                  label: isUpdating ? "更新中..." : "立即更新汇率",
-                  icon: isUpdating 
-                    ? SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: getColor(context, "black"),
-                        ),
-                      )
-                    : appStateSettings["outlinedIcons"]
-                        ? Icons.refresh_outlined
-                        : Icons.refresh_rounded,
-                  color: isUpdating 
-                      ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
-                      : Theme.of(context).colorScheme.secondaryContainer,
-                  iconColor: isUpdating 
-                      ? Theme.of(context).colorScheme.onSecondaryContainer.withOpacity(0.5)
-                      : Theme.of(context).colorScheme.onSecondaryContainer,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TappableOpacityButton(
+                        label: isUpdating ? "更新中..." : "立即更新汇率",
+                        onTap: isUpdating ? null : updateExchangeRates,
+                        color: isUpdating 
+                            ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
+                            : Theme.of(context).colorScheme.secondaryContainer,
+                        textColor: isUpdating 
+                            ? Theme.of(context).colorScheme.onSecondaryContainer.withOpacity(0.5)
+                            : Theme.of(context).colorScheme.onSecondaryContainer,
+                        expandedLayout: true,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    ButtonIcon(
+                      onTap: isUpdating ? null : updateExchangeRates,
+                      icon: isUpdating 
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: getColor(context, "black"),
+                            ),
+                          )
+                        : appStateSettings["outlinedIcons"]
+                            ? Icons.refresh_outlined
+                            : Icons.refresh_rounded,
+                      color: isUpdating 
+                          ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
+                          : Theme.of(context).colorScheme.secondaryContainer,
+                      iconColor: isUpdating 
+                          ? Theme.of(context).colorScheme.onSecondaryContainer.withOpacity(0.5)
+                          : Theme.of(context).colorScheme.onSecondaryContainer,
+                    ),
+                  ],
                 ),
               ],
             ),
