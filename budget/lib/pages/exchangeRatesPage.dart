@@ -238,18 +238,9 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                     SizedBox(width: 10),
                     ButtonIcon(
                       onTap: isUpdating ? null : () => updateExchangeRates(),
-                      icon: isUpdating 
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: getColor(context, "black"),
-                            ),
-                          )
-                        : appStateSettings["outlinedIcons"]
-                            ? Icons.refresh_outlined
-                            : Icons.refresh_rounded,
+                      icon: appStateSettings["outlinedIcons"]
+                          ? Icons.refresh_outlined
+                          : Icons.refresh_rounded,
                       color: isUpdating 
                           ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
                           : Theme.of(context).colorScheme.secondaryContainer,
