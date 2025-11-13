@@ -70,7 +70,7 @@ Future<bool> checkConnection() async {
 
 // Google登录相关变量已删除
 // signIn.GoogleSignIn? googleSignIn;
-// signIn.GoogleSignInAccount? googleUser;
+final signIn.GoogleSignInAccount? googleUser = null; // 添加一个null值以避免编译错误
 
 // Google登录功能已禁用
 Future<bool> signInGoogle(
@@ -546,7 +546,7 @@ class _BackupManagementState extends State<BackupManagement> {
         children: [
           AboutInfoBox(
             title: "功能已禁用".tr(),
-            description: "Google Drive备份功能已被禁用".tr(),
+            list: ["Google Drive备份功能已被禁用".tr()],
             color: appStateSettings["materialYou"] == true
                 ? Theme.of(context).colorScheme.secondaryContainer
                 : getColor(context, "lightDarkAccentHeavyLight"),
