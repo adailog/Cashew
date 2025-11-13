@@ -218,7 +218,6 @@ Future<bool> signInGoogle(
 void refreshUIAfterLoginChange() {
   sidebarStateKey.currentState?.refreshState();
   accountsPageStateKey.currentState?.refreshState();
-  settingsGoogleAccountLoginButtonKey.currentState?.refreshState();
 }
 
 Future<bool> testIfHasGmailAccess() async {
