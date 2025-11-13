@@ -201,6 +201,7 @@ class _RatingPopupState extends State<RatingPopup> {
   }
 }
 
+// Firebase反馈功能已被禁用
 Future<bool> shareFeedback(String feedbackText, String feedbackType,
     {String? feedbackEmail, int? selectedStars}) async {
   loadingIndeterminateKey.currentState?.setVisibility(true);
@@ -215,35 +216,20 @@ Future<bool> shareFeedback(String feedbackText, String feedbackType,
     error = true;
   }
 
+  // Firebase反馈功能已被禁用，仅显示本地提示
   try {
-    FirebaseFirestore? db = await firebaseGetDBInstanceAnonymous();
-    if (db == null) {
-      throw ("Can't connect to db");
-    }
-    Map<String, dynamic> feedbackEntry = {
-      "stars": (selectedStars ?? -1) + 1,
-      "feedback": feedbackText,
-      "dateTime": DateTime.now(),
-      "feedbackType": feedbackType,
-      "email": feedbackEmail,
-      "platform": getPlatform().toString(),
-      "appVersion": getVersionString(),
-    };
-
-    DocumentReference feedbackCreatedOnCloud =
-        await db.collection("feedback").add(feedbackEntry);
-
     openSnackbar(SnackbarMessage(
-        title: "feedback-shared".tr(),
-        description: "thank-you".tr(),
+        title: "反馈已收到".tr(),
+        description: "感谢您的反馈，但反馈功能已被禁用".tr(),
         icon: appStateSettings["outlinedIcons"]
-            ? Icons.rate_review_outlined
-            : Icons.rate_review_rounded,
+            ? Icons.info_outlined
+            : Icons.info_rounded,
         timeout: Duration(milliseconds: 2500)));
   } catch (e) {
     print(e.toString());
     error = true;
   }
+  
   if (error == true) {
     print("Error leaving review on store");
     openSnackbar(SnackbarMessage(
