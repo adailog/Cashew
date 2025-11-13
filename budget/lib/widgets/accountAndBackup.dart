@@ -300,7 +300,7 @@ Future<void> deleteRecentBackups(context, amountToKeep,
   return;
 }
 
-Future<void> deleteBackup(drive.DriveApi driveApi, String fileId) async {
+Future<void> deleteBackup(dynamic driveApi, String fileId) async {
   // 云备份删除功能已禁用
   return;
 }
@@ -331,7 +331,7 @@ Future<void> chooseBackup(context,
 }
 
 Future<void> loadBackup(
-    BuildContext context, drive.DriveApi driveApi, drive.File file) async {
+    BuildContext context, dynamic driveApi, dynamic file) async {
   // 云备份加载功能已禁用
   openSnackbar(
     SnackbarMessage(
@@ -475,7 +475,7 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
               )
             : SettingsContainerOpenPage(
                 openPage: AccountsPage(),
-                title: widget.forceButtonName ?? googleUser!.displayName ?? "",
+                title: widget.forceButtonName ?? "用户".tr(),
                 icon: widget.forceButtonName == null
                     ? appStateSettings["outlinedIcons"] == true
                         ? Icons.person_outlined
