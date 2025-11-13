@@ -30,7 +30,8 @@ import 'package:csv/csv.dart';
 import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
+// http包导入已删除
+// import 'package:http/http.dart' as http;
 
 class ImportCSV extends StatefulWidget {
   const ImportCSV({Key? key}) : super(key: key);
@@ -519,56 +520,18 @@ class _ImportCSVState extends State<ImportCSV> {
     return "";
   }
 
-  _enterGoogleSheetURL() {
-    // print(DateTime.now().toString());
-    openBottomSheet(
-      context,
-      popupWithKeyboard: true,
-      PopupFramework(
-        title: "enter-google-sheet-url".tr(),
-        subtitle: "enter-google-sheet-url-description".tr(),
-        child: SelectText(
-          buttonLabel: "import".tr(),
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.link_outlined
-              : Icons.link_rounded,
-          setSelectedText: (_) {},
-          nextWithInput: (url) async {
-            String? csvString;
-            await openLoadingPopupTryCatch(() async {
-              String? csvURL = convertGoogleSheetsUrlToCsvUrl(url);
-              csvString = await fetchDataFromCsvUrl(csvURL);
-            }, onError: (e) {
-              openPopup(
-                context,
-                title: "csv-error".tr(),
-                description: "consider-csv-template".tr() + "\n" + e.toString(),
-                onCancelWithBoxContext: (BuildContext boxContext) async {
-                  await saveSampleCSV(boxContext: boxContext);
-                  popRoute(context);
-                },
-                onCancelLabel: "get-template".tr(),
-                icon: appStateSettings["outlinedIcons"]
-                    ? Icons.error_outlined
-                    : Icons.error_rounded,
-                onSubmitLabel: "ok".tr(),
-                onSubmit: () {
-                  popRoute(context);
-                },
-                barrierDismissible: false,
-              );
-            });
-            if (csvString != null) {
-              _assignColumns(csvString!, importFromSheets: true);
-            }
-          },
-          placeholder:
-              "https://docs.google.com/spreadsheets/d/1Eiib2fiaC8SNdau8T8TBQql-wyWXVYOLJY-7Ycuky4I/edit?usp=sharing",
-          autoFocus: true,
-        ),
-      ),
-    );
-  }
+  // Google Sheets功能已被禁用
+_enterGoogleSheetURL() {
+  openSnackbar(
+    SnackbarMessage(
+      title: "功能已禁用".tr(),
+      description: "Google Sheets导入功能已被禁用".tr(),
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.info_outlined
+          : Icons.info_rounded,
+    ),
+  );
+}
 
   String? convertGoogleSheetsUrlToCsvUrl(String googleSheetsUrl) {
     List<String> parts = googleSheetsUrl.split("/");
@@ -583,14 +546,9 @@ class _ImportCSVState extends State<ImportCSV> {
   }
 
   Future<String?> fetchDataFromCsvUrl(String? csvUrl) async {
-    if (csvUrl == null) throw ("URL Parsing error.");
-    final response = await http.get(Uri.parse(csvUrl));
-    if (response.statusCode == 200) {
-      String data = response.body;
-      return data;
-    } else {
-      throw ("HTTP Request failed with status code: ${response.statusCode}");
-    }
+    // 网络请求已被禁用
+    print("Google Sheets导入功能已被禁用");
+    throw ("网络请求已被禁用");
   }
 
   @override
@@ -628,17 +586,34 @@ class _ImportCSVState extends State<ImportCSV> {
             );
           }),
         ),
+        // Google Sheets功能已被禁用
         SettingsContainer(
-          onTap: () async {
-            await _enterGoogleSheetURL();
+          onTap: () {
+            openSnackbar(
+              SnackbarMessage(
+                title: "功能已禁用".tr(),
+                description: "Google Sheets导入功能已被禁用".tr(),
+                icon: appStateSettings["outlinedIcons"]
+                    ? Icons.info_outlined
+                    : Icons.info_rounded,
+              ),
+            );
           },
           title: "import-google-sheet".tr(),
           icon: appStateSettings["outlinedIcons"]
               ? Icons.table_chart_outlined
               : Icons.table_chart_rounded,
           afterWidget: LowKeyButton(
-            onTap: () async {
-              getGoogleSheetTemplate(context);
+            onTap: () {
+              openSnackbar(
+                SnackbarMessage(
+                  title: "功能已禁用".tr(),
+                  description: "Google Sheets模板功能已被禁用".tr(),
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.info_outlined
+                      : Icons.info_rounded,
+                ),
+              );
             },
             extraWidget: Padding(
               padding: const EdgeInsetsDirectional.only(start: 4),
@@ -781,25 +756,16 @@ class _CustomDateFormatInputState extends State<CustomDateFormatInput> {
   }
 }
 
+// Google Sheets功能已被禁用
 getGoogleSheetTemplate(BuildContext context) {
-  openUrl(
-      "https://docs.google.com/spreadsheets/d/1Eiib2fiaC8SNdau8T8TBQql-wyWXVYOLJY-7Ycuky4I/edit?usp=sharing");
-  openPopup(
-    context,
-    icon: appStateSettings["outlinedIcons"]
-        ? Icons.table_chart_outlined
-        : Icons.table_chart_rounded,
-    title: "create-template-copy".tr(),
-    description: "create-template-copy-description".tr(),
-    onSubmit: () {
-      popRoute(context);
-    },
-    onSubmitLabel: "ok".tr(),
-    onCancel: () {
-      openUrl(
-          "https://support.google.com/docs/answer/49114?hl=en&co=GENIE.Platform%3DDesktop#zippy=%2Cmake-a-copy-of-a-file#:~:text=Make%20a%20copy%20of%20a%20file");
-    },
-    onCancelLabel: "help".tr(),
+  openSnackbar(
+    SnackbarMessage(
+      title: "功能已禁用".tr(),
+      description: "Google Sheets模板功能已被禁用".tr(),
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.info_outlined
+          : Icons.info_rounded,
+    ),
   );
 }
 
