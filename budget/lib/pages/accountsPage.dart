@@ -445,14 +445,11 @@ class _SignInWithGoogleFlyInState extends State<SignInWithGoogleFlyIn> {
   }
 
   void checkCloudFunctionsStatus() {
+    // 云同步功能已被禁用，始终隐藏Google登录提示
     Future.delayed(Duration(seconds: 1), () {
-      if (!runningCloudFunctions && entireAppLoaded) {
-        setState(() {
-          hide = false;
-        });
-      } else {
-        checkCloudFunctionsStatus();
-      }
+      setState(() {
+        hide = true;
+      });
     });
   }
 
