@@ -11,7 +11,6 @@ import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textWidgets.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:budget/colors.dart';
@@ -58,7 +57,8 @@ class _SharedBudgetSettingsState extends State<SharedBudgetSettings> {
         });
         return;
       }
-      print(FirebaseAuth.instance.currentUser!.email);
+      // Firebase功能已被禁用
+      print("Firebase认证功能已被禁用");
       print(widget.budget.sharedOwnerMember);
       setState(() {
         members = response;
