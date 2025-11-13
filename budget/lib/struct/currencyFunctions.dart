@@ -12,30 +12,40 @@ loadCurrencyJSON() async {
 }
 
 Future<bool> getExchangeRates() async {
-  print("Getting exchange rates for current wallets");
-  // List<String?> uniqueCurrencies =
-  //     await database.getUniqueCurrenciesFromWallets();
-  Map<dynamic, dynamic> cachedCurrencyExchange =
-      appStateSettings["cachedCurrencyExchange"];
   try {
-    Uri url = Uri.parse(
-        "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.min.json");
-    dynamic response = await http.get(url);
+    // 使用fawazahmed0的exchange-api获取最新汇率
+    final response = await http.get(
+      Uri.parse('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'),
+    );
+
     if (response.statusCode == 200) {
-      cachedCurrencyExchange = json.decode(response.body)?["usd"];
+      Map<String, dynamic> data = json.decode(response.body);
+      Map<String, dynamic> rates = data['usd'];
+      
+      // 更新缓存的汇率数据
+      Map<String, dynamic> cachedCurrencyExchange = 
+          appStateSettings["cachedCurrencyExchange"] ?? {};
+      
+      // 更新汇率数据
+      rates.forEach((currency, rate) {
+        if (currency != 'date') { // 跳过日期字段
+          cachedCurrencyExchange[currency.toUpperCase()] = rate;
+        }
+      });
+      
+      // 保存更新后的汇率
+      await updateSettings("cachedCurrencyExchange", cachedCurrencyExchange);
+      
+      print("汇率数据已更新");
+      return true;
+    } else {
+      print("获取汇率失败: ${response.statusCode}");
+      return false;
     }
   } catch (e) {
-    print("Error getting currency rates: " + e.toString());
+    print("获取汇率时发生错误: $e");
     return false;
   }
-  // print(cachedCurrencyExchange);
-  updateSettings(
-    "cachedCurrencyExchange",
-    cachedCurrencyExchange,
-    updateGlobalState:
-        appStateSettings["cachedCurrencyExchange"].keys.length <= 0,
-  );
-  return true;
 }
 
 double amountRatioToPrimaryCurrencyGivenPk(
