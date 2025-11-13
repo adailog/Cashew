@@ -902,26 +902,6 @@ class PreviewDemoButton extends StatelessWidget {
 }
 
 Future<bool> checkLockedFeatureIfInDemoMode(BuildContext? context) async {
-  if (context == null && appStateSettings["previewDemo"] == true) return false;
-  if (appStateSettings["previewDemo"] == true) {
-    await openPopup(
-      context!,
-      icon: appStateSettings["outlinedIcons"]
-          ? Icons.warning_outlined
-          : Icons.warning_rounded,
-      title: "not-available-in-preview-demo".tr(),
-      description: "not-available-in-preview-demo-description".tr(),
-      onCancel: () {
-        popRoute(context);
-      },
-      onCancelLabel: "cancel".tr(),
-      onSubmit: () {
-        popAllRoutes(context);
-        deletePreviewData(resetOnboard: true);
-      },
-      onSubmitLabel: "exit-demo".tr(),
-    );
-    return false;
-  }
+  // 直接返回true，不再检查演示模式锁定
   return true;
 }
