@@ -514,10 +514,8 @@ class OnBoardingPageBodyState extends State<OnBoardingPageBody> {
 
                         // set this to true so cloud functions run
                         entireAppLoaded = true;
-                        await runAllCloudFunctions(
-                          context,
-                          forceSignIn: true,
-                        );
+                        // 云同步功能已被禁用
+                        print("云同步功能已被禁用");
 
                         nextNavigation();
                         loadingIndeterminateKey.currentState
