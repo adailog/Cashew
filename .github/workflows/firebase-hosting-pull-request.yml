@@ -23,18 +23,25 @@ jobs:
     - name: Set up Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.16.0'
+        flutter-version: '3.19.6'
         channel: 'stable'
+        cache: true
         
     - name: Get Flutter dependencies
       run: |
         cd budget
         flutter pub get
+        flutter doctor -v
         
     - name: Generate code
       run: |
         cd budget
         flutter packages pub run build_runner build --delete-conflicting-outputs
+        
+    - name: Check Flutter environment
+      run: |
+        cd budget
+        flutter --version
         
     - name: Build APK (debug)
       run: |
