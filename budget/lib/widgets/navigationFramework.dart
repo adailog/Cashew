@@ -4,7 +4,6 @@ import 'package:budget/database/initializeDefaultDatabase.dart';
 import 'package:budget/database/tables.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/main.dart';
-import 'package:budget/pages/aboutPage.dart';
 import 'package:budget/pages/accountsPage.dart';
 import 'package:budget/pages/addBudgetPage.dart';
 import 'package:budget/pages/addCategoryPage.dart';
@@ -21,6 +20,7 @@ import 'package:budget/pages/homePage/homePage.dart';
 import 'package:budget/pages/notificationsPage.dart';
 import 'package:budget/pages/objectivesListPage.dart';
 import 'package:budget/pages/onBoardingPage.dart';
+import 'package:budget/pages/premiumPage.dart';
 import 'package:budget/pages/settingsPage.dart';
 import 'package:budget/pages/subscriptionsPage.dart';
 import 'package:budget/pages/transactionsListPage.dart';
@@ -51,7 +51,7 @@ import 'package:budget/widgets/openContainerNavigation.dart';
 import 'package:budget/widgets/openPopup.dart';
 import 'package:budget/widgets/openSnackbar.dart';
 import 'package:budget/widgets/outlinedButtonStacked.dart';
-import 'package:budget/widgets/ratingPopup.dart';
+// Rating popup import removed
 import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/selectChips.dart';
 import 'package:budget/widgets/selectedTransactionsAppBar.dart';
@@ -70,7 +70,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_lazy_indexed_stack/flutter_lazy_indexed_stack.dart';
-import 'package:googleapis/drive/v3.dart';
+// Google Drive功能已移除，移除相关导入
 import 'package:provider/provider.dart';
 // import 'package:feature_discovery/feature_discovery.dart';
 
@@ -112,11 +112,11 @@ class InitialPageRouteNavigator extends StatelessWidget {
             }
           },
           child: PageNavigationFrameworkSafeArea(
-            child: PageNavigationFramework(
-              key: pageNavigationFrameworkKey,
-              widthSideNavigationBar: getWidthNavigationSidebar(context),
+              child: PageNavigationFramework(
+                key: pageNavigationFrameworkKey,
+                widthSideNavigationBar: getWidthNavigationSidebar(context),
+              ),
             ),
-          ),
         ),
       ),
     );
@@ -285,7 +285,7 @@ GlobalKey<ObjectivesListPageState> objectivesListPageStateKey = GlobalKey();
 GlobalKey<UpcomingOverdueTransactionsState>
     upcomingOverdueTransactionsStateKey = GlobalKey();
 GlobalKey<CreditDebtTransactionsState> creditDebtTransactionsKey = GlobalKey();
-// GlobalKey<ProductsState> purchasesStateKey = GlobalKey(); // Removed Pro related code
+GlobalKey<ProductsState> purchasesStateKey = GlobalKey();
 GlobalKey<AccountsPageState> accountsPageStateKey = GlobalKey();
 GlobalKey<GoogleAccountLoginButtonState> settingsGoogleAccountLoginButtonKey =
     GlobalKey();
@@ -301,51 +301,22 @@ bool runningCloudFunctions = false;
 bool errorSigningInDuringCloud = false;
 Future<bool> runAllCloudFunctions(BuildContext context,
     {bool forceSignIn = false}) async {
-  print("Running All Cloud Functions");
+  print("Running necessary initialization functions");
   runningCloudFunctions = true;
   errorSigningInDuringCloud = false;
   try {
+    // 只保留必要的初始化操作
     loadingIndeterminateKey.currentState?.setVisibility(true);
-    await runForceSignIn(context);
-    await syncData(context);
-    if (appStateSettings["emailScanningPullToRefresh"] ||
-        entireAppLoaded == false) {
-      loadingIndeterminateKey.currentState?.setVisibility(true);
-      await parseEmailsInBackground(context, forceParse: true);
-    }
-    loadingIndeterminateKey.currentState?.setVisibility(true);
-    await syncPendingQueueOnServer(); //sync before download
-    loadingIndeterminateKey.currentState?.setVisibility(true);
-    await getCloudBudgets();
-    loadingIndeterminateKey.currentState?.setVisibility(true);
-    await createBackupInBackground(context);
-    loadingIndeterminateKey.currentState?.setVisibility(true);
+    // 获取汇率数据，这是应用正常运行所需的功能
     await getExchangeRates();
   } catch (e) {
-    print("Error running sync functions on load: " + e.toString());
+    print("Error running initialization functions: " + e.toString());
+  } finally {
+    // 确保加载指示器被隐藏
     loadingIndeterminateKey.currentState?.setVisibility(false);
     runningCloudFunctions = false;
-    canSyncData = true;
-    if (e is DetailedApiRequestError &&
-            e.status == 401 &&
-            forceSignIn == true ||
-        e is PlatformException) {
-      // Request had invalid authentication credentials. Try logging out and back in.
-      // This stems from silent sign-in not providing the credentials for GDrive API for e.g.
-      await refreshGoogleSignIn();
-      runAllCloudFunctions(context);
-    } else {
-      if (kIsWeb && appStateSettings["webForceLoginPopupOnLaunch"] == true) {
-        signOutGoogle();
-      }
-    }
-    return false;
+    errorSigningInDuringCloud = false;
   }
-  loadingIndeterminateKey.currentState?.setVisibility(false);
-  Future.delayed(Duration(milliseconds: 2000), () {
-    runningCloudFunctions = false;
-  });
-  errorSigningInDuringCloud = false;
   return true;
 }
 
@@ -367,13 +338,12 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
     EditBudgetPage(), //10
     EditCategoriesPage(), //11
     EditAssociatedTitlesPage(), //12
-    AboutPage(), //13
-    ObjectivesListPage(key: objectivesListPageStateKey, backButton: false), //14
-    EditObjectivesPage(objectiveType: ObjectiveType.goal), //15
+    ObjectivesListPage(key: objectivesListPageStateKey, backButton: false), //13
+    EditObjectivesPage(objectiveType: ObjectiveType.goal), //14
     UpcomingOverdueTransactions(
-        key: upcomingOverdueTransactionsStateKey,
-        overdueTransactions: null), //16
-    CreditDebtTransactions(key: creditDebtTransactionsKey, isCredit: null), //17
+          key: upcomingOverdueTransactionsStateKey,
+          overdueTransactions: null), //15
+    CreditDebtTransactions(key: creditDebtTransactionsKey, isCredit: null), //16
   ];
 
   late int currentPage = widget.widthSideNavigationBar <= 0
@@ -410,31 +380,27 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
           Theme.of(context).extension<AppColors>(),
           Theme.of(context).brightness));
 
-      bool isDatabaseCorruptedPopupShown = openDatabaseCorruptedPopup(context);
-      if (isDatabaseCorruptedPopupShown) return;
+      // 数据库损坏检查功能已移除
+      bool isDatabaseCorruptedPopupShown = false;
 
       await initializeNotificationsPlatform();
 
       bool isChangelogShown = showChangelog(context);
-      bool isRatingPopupShown = false;
-      if (isChangelogShown == false) {
-        isRatingPopupShown = openRatingPopupCheck(context);
-      }
 
       await setDailyNotifications(context);
       await initializeDefaultDatabase();
       runNotificationPayLoads(context);
       runQuickActionsPayLoads(context);
       initializeLocalizedMonthNames();
-      // initializeStoreAndPurchases(
-      //     context: context, popRouteWithPurchase: false); // Removed Pro related code
+      initializeStoreAndPurchases(
+          context: context, popRouteWithPurchase: false);
 
       if (entireAppLoaded == false) {
         await runAllCloudFunctions(context);
       }
 
       // Do this after cloud functions attempt (i.e. if user is not signed in we can show it)
-      if (isRatingPopupShown == false && isChangelogShown == false) {
+      if (isChangelogShown == false) {
         openBackupReminderPopupCheck(context);
       }
 
@@ -456,12 +422,10 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       print("Entire app loaded");
 
       database.watchAllForAutoSync().listen((event) {
-        // Must be logged in to perform an automatic sync - googleUser != null
-        // If we remove this, it will ask the user to login though - but it can be annoying
-        // Users can visually see the last time of sync, especially on web where sign-in is not automatic,
-        // so it shouldn't be an issue
-        if (runningCloudFunctions == false && googleUser != null) {
-          createSyncBackup(changeMadeSync: true);
+        // 移除了对googleUser的检查，只检查是否有云函数在运行
+        if (runningCloudFunctions == false) {
+          // 注释掉自动同步功能，因为我们已经移除了Google相关功能
+          // createSyncBackup(changeMadeSync: true);
         }
       });
 
@@ -520,7 +484,7 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
                 routesToPopAfterDelete: RoutesToPopAfterDelete.None,
               ),
             ),
-            condition: [0, 1, 2, 14].contains(currentPage),
+            condition: [0, 1, 2, 13].contains(currentPage),
           ),
         ),
       ),
