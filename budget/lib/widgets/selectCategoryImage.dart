@@ -4,7 +4,6 @@ import 'package:budget/struct/settings.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/framework/popupFramework.dart';
 import 'package:budget/widgets/openBottomSheet.dart';
-import 'package:budget/widgets/ratingPopup.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/struct/iconObjects.dart';
 import 'package:budget/widgets/textInput.dart';
