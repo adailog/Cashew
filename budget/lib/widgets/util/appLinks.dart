@@ -276,7 +276,7 @@ Future processMessageToParse(
 
 Future executeAppLink(BuildContext? context, Uri uri,
     {Function(dynamic)? onDebug}) async {
-  if (appStateSettings["hasOnboarded"] != true) return;
+  // Removed hasOnboarded check as onboarding is disabled
   if (!appLinksThrottler.canProceed()) return;
 
   String endPoint = getApiEndpoint(uri);
