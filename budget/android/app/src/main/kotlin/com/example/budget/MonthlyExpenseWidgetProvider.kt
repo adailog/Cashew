@@ -1,11 +1,14 @@
-package com.example.budget
+package com.budget.tracker_app
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
 import androidx.core.graphics.ColorUtils
-import com.home_widget.HomeWidgetProvider
+import es.antonborri.home_widget.HomeWidgetLaunchIntent
+import es.antonborri.home_widget.HomeWidgetProvider
 
 import es.antonborri.home_widget.R
 
