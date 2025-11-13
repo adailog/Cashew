@@ -187,6 +187,8 @@ Future<Map<String, dynamic>> getDefaultPreferences() async {
     "expandAllCategoriesWithSpendingLimits": false,
     // Should be of type Map<String, double>
     "customCurrencyAmounts": {},
+    "autoUpdateExchangeRates": true,
+    "lastExchangeRateUpdate": null,
     "iOSEmulate": false,
     "iOSAnimatedGoo": false,
     "expandedNavigationSidebar": true,
