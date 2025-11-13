@@ -16,10 +16,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 Future deletePreviewData({bool resetOnboard = false}) async {
-  if (resetOnboard) {
-    updateSettings("hasOnboarded", false, updateGlobalState: true);
-  }
-
+  // Removed hasOnboarded check as onboarding is disabled
+  // if (resetOnboard) {
+  //   updateSettings("hasOnboarded", false, updateGlobalState: true);
+  // }
 
   loadingIndeterminateKey.currentState?.setVisibility(true);
   try {
