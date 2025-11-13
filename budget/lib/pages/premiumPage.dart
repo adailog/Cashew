@@ -667,7 +667,7 @@ Future<Map<String, ProductDetails>> initializeStoreAndPurchases(
   }
 
   // Can't connect to store, don't show popup
-  premiumPopupEnabled = false;
+  updateSettings("premiumPopupEnabled", false, updateGlobalState: false);
   return {};
 }
 
@@ -715,7 +715,7 @@ showHelpRestorePopup(BuildContext context) {
 }
 
 bool hidePremiumPopup() {
-  return premiumPopupEnabled == false ||
+  return appStateSettings["premiumPopupEnabled"] == false ||
       appStateSettings["purchaseID"] != null ||
       appStateSettings["previewDemo"] == true;
 }
