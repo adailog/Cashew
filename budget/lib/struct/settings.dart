@@ -245,9 +245,6 @@ Future<Map<String, dynamic>> getUserSettings() async {
     });
     
     // Ensure default language is Chinese if not set or if it's System
-    if (userSettingsJSON["locale"] == null || userSettingsJSON["locale"] == "System") {
-      userSettingsJSON["locale"] = "zh";
-    }
     
     return userSettingsJSON;
   } catch (e) {
