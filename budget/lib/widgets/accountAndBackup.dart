@@ -83,14 +83,14 @@ Future<bool> signInGoogle(
   // bool isConnected = false;
   // 内联实现checkLockedFeatureIfInDemoMode功能
   if (appStateSettings["demoMode"] == true) {
-    unawaited(showPopupMessage(
-      context,
-      "demo-mode-disabled".tr(),
-      null,
-      icon: appStateSettings["outlinedIcons"]
-          ? Icons.warning_outlined
-          : Icons.warning_rounded,
-    ));
+    // unawaited(showPopupMessage(
+    //   context,
+    //   "demo-mode-disabled".tr(),
+    //   null,
+    //   icon: appStateSettings["outlinedIcons"]
+    //       ? Icons.warning_outlined
+    //       : Icons.warning_rounded,
+    // )); // Removed Pro related code
     return false;
   }
   if (appStateSettings["emailScanning"] == false) gMailPermissions = false;
