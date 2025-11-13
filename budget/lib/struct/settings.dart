@@ -52,7 +52,7 @@ Future<bool> initializeSettings() async {
         }
       });
       // Always reset the language/locale when restoring a backup
-      userSettings["locale"] = "System"; 
+      userSettings["locale"] = "System"; // Changed from "System" to "zh" to ensure Chinese as default
       userSettings["databaseJustImported"] = false;
       print("Settings were restored");
     } catch (e) {
@@ -244,7 +244,6 @@ Future<Map<String, dynamic>> getUserSettings() async {
       }
     });
     
-    // Ensure default language is Chinese if not set or if it's System
     
     return userSettingsJSON;
   } catch (e) {
@@ -290,7 +289,13 @@ void openLanguagePicker(BuildContext context) {
               // makes use of this value for some languages
               appStateSettings["locale"] = value;
               if (value == "System") {
-                context.resetLocale();
+                // Try to get system locale and if it's Chinese, use it directly
+                final systemLocale = WidgetsBinding.instance.platformDispatcher.locale;
+                if (systemLocale.languageCode == 'zh') {
+                  context.setLocale(supportedLocales["zh"]!);
+                } else {
+                  context.resetLocale();
+                }
               } else {
                 if (supportedLocales[value] != null)
                   context.setLocale(supportedLocales[value]!);
@@ -314,7 +319,15 @@ void openLanguagePicker(BuildContext context) {
 
 Future<void> resetLanguageToSystem(BuildContext context) async {
   if (appStateSettings["locale"].toString() == "System") return;
-  context.resetLocale();
+  
+  // Try to get system locale and if it's Chinese, use it directly
+  final systemLocale = WidgetsBinding.instance.platformDispatcher.locale;
+  if (systemLocale.languageCode == 'zh') {
+    context.setLocale(supportedLocales["zh"]!);
+  } else {
+    context.resetLocale();
+  }
+  
   await updateSettings(
     "locale",
     "System",
