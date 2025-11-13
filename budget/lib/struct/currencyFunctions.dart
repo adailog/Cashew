@@ -11,12 +11,30 @@ loadCurrencyJSON() async {
       await rootBundle.loadString('assets/static/generated/currencies.json'));
 }
 
-Future<bool> getExchangeRates() async {
+Future<bool> getExchangeRates({bool forceUpdate = false}) async {
   try {
+    // 检查是否需要更新汇率
+    if (!forceUpdate && appStateSettings["autoUpdateExchangeRates"] == false) {
+      print("自动更新汇率已禁用");
+      return false;
+    }
+    
+    // 检查上次更新时间
+    if (!forceUpdate && appStateSettings["lastExchangeRateUpdate"] != null) {
+      DateTime lastUpdate = DateTime.parse(appStateSettings["lastExchangeRateUpdate"]);
+      DateTime now = DateTime.now();
+      
+      // 如果距离上次更新不到24小时，则不更新
+      if (now.difference(lastUpdate).inHours < 24) {
+        print("距离上次更新不足24小时，跳过汇率更新");
+        return true; // 返回true表示有可用的汇率数据
+      }
+    }
+    
     // 使用fawazahmed0的exchange-api获取最新汇率
     final response = await http.get(
       Uri.parse('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json'),
-    );
+    ).timeout(Duration(seconds: 10)); // 添加超时处理
 
     if (response.statusCode == 200) {
       Map<String, dynamic> data = json.decode(response.body);
@@ -36,14 +54,29 @@ Future<bool> getExchangeRates() async {
       // 保存更新后的汇率
       await updateSettings("cachedCurrencyExchange", cachedCurrencyExchange);
       
+      // 更新最后更新时间
+      await updateSettings("lastExchangeRateUpdate", DateTime.now().toString());
+      
       print("汇率数据已更新");
       return true;
     } else {
       print("获取汇率失败: ${response.statusCode}");
+      // 检查是否有缓存的汇率数据
+      if (appStateSettings["cachedCurrencyExchange"] != null && 
+          (appStateSettings["cachedCurrencyExchange"] as Map).isNotEmpty) {
+        print("使用缓存的汇率数据");
+        return true;
+      }
       return false;
     }
   } catch (e) {
     print("获取汇率时发生错误: $e");
+    // 检查是否有缓存的汇率数据
+    if (appStateSettings["cachedCurrencyExchange"] != null && 
+        (appStateSettings["cachedCurrencyExchange"] as Map).isNotEmpty) {
+      print("使用缓存的汇率数据");
+      return true;
+    }
     return false;
   }
 }
