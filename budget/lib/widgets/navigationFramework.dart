@@ -287,7 +287,7 @@ GlobalKey<ObjectivesListPageState> objectivesListPageStateKey = GlobalKey();
 GlobalKey<UpcomingOverdueTransactionsState>
     upcomingOverdueTransactionsStateKey = GlobalKey();
 GlobalKey<CreditDebtTransactionsState> creditDebtTransactionsKey = GlobalKey();
-GlobalKey<ProductsState> purchasesStateKey = GlobalKey();
+// GlobalKey<ProductsState> purchasesStateKey = GlobalKey(); // Removed Pro related code
 GlobalKey<AccountsPageState> accountsPageStateKey = GlobalKey();
 GlobalKey<GoogleAccountLoginButtonState> settingsGoogleAccountLoginButtonKey =
     GlobalKey();
@@ -428,8 +428,8 @@ class PageNavigationFrameworkState extends State<PageNavigationFramework> {
       runNotificationPayLoads(context);
       runQuickActionsPayLoads(context);
       initializeLocalizedMonthNames();
-      initializeStoreAndPurchases(
-          context: context, popRouteWithPurchase: false);
+      // initializeStoreAndPurchases(
+      //     context: context, popRouteWithPurchase: false); // Removed Pro related code
 
       if (entireAppLoaded == false) {
         await runAllCloudFunctions(context);
