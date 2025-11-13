@@ -1,7 +1,7 @@
 import 'package:budget/colors.dart';
 import 'package:budget/database/tables.dart';
-import 'package:budget/pages/aboutPage.dart';
 import 'package:budget/pages/addTransactionPage.dart';
+import 'package:budget/widgets/aboutInfoBox.dart';
 import 'package:budget/struct/currencyFunctions.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/fadeIn.dart';
