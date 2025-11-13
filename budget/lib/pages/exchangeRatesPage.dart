@@ -225,7 +225,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                     Expanded(
                       child: TappableOpacityButton(
                         label: isUpdating ? "更新中..." : "立即更新汇率",
-                        onTap: isUpdating ? null : updateExchangeRates,
+                        onTap: isUpdating ? null : () => updateExchangeRates(),
                         color: isUpdating 
                             ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
                             : Theme.of(context).colorScheme.secondaryContainer,
@@ -237,7 +237,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                     ),
                     SizedBox(width: 10),
                     ButtonIcon(
-                      onTap: isUpdating ? null : updateExchangeRates,
+                      onTap: isUpdating ? null : () => updateExchangeRates(),
                       icon: isUpdating 
                         ? SizedBox(
                             width: 20,
@@ -249,7 +249,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                           )
                         : appStateSettings["outlinedIcons"]
                             ? Icons.refresh_outlined
-                            : Icons.refresh_rounded,
+                            : Icons.refresh_rounded as IconData,
                       color: isUpdating 
                           ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
                           : Theme.of(context).colorScheme.secondaryContainer,
