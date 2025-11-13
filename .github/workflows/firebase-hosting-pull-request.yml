@@ -2,66 +2,46 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main, master ]
-  workflow_dispatch:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Java JDK
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        
-    - name: Set up Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.19.6'
-        channel: 'stable'
-        cache: true
-        
-    - name: Get Flutter dependencies
-      run: |
-        cd budget
-        flutter pub get
-        flutter doctor -v
-        
-    - name: Generate code
-      run: |
-        cd budget
-        flutter packages pub run build_runner build --delete-conflicting-outputs
-        
-    - name: Check Flutter environment
-      run: |
-        cd budget
-        flutter --version
-        
-    - name: Build APK (debug)
-      run: |
-        cd budget
-        flutter build apk --debug
-        
-    - name: Upload debug APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: debug-apk
-        path: budget/build/app/outputs/flutter-apk/app-debug.apk
-        
-    - name: Build APK (release, unsigned)
-      run: |
-        cd budget
-        # Build unsigned release APK
-        flutter build apk --release --no-shrink
-        
-    - name: Upload release APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-apk
-        path: budget/build/app/outputs/flutter-apk/app-release.apk
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2  # 使用正确的 v2 版本
+        with:
+          flutter-version: '3.22.3'  # 具体版本号（示例：3.22.3，需更新为最新稳定版）
+
+      - name: Verify Flutter installation
+        run: flutter --version  # 检查是否正确安装
+
+      - name: Install dependencies
+        run: |
+          cd budget  # 确保目录正确（Cashew 的 Flutter 项目目录）
+          flutter pub get
+
+      - name: Generate database code
+        run: |
+          cd budget
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build Release APK (unsigned)
+        run: |
+          cd budget
+          flutter build apk --release # 先构建 Debug 版，排除签名问题
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cashew-release-apk
+          path: |
+            budget/build/app/outputs/apk/release/app-release.apk
+            budget/build/app/outputs/flutter-apk/app-release.apk
+            budget/build/app/outputs/apk/*/*.apk
