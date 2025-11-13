@@ -21,6 +21,7 @@ import 'package:budget/widgets/exportDB.dart';
 import 'package:budget/widgets/importCSV.dart';
 import 'package:budget/widgets/exportCSV.dart';
 import 'package:budget/pages/autoTransactionsPageEmail.dart';
+import 'package:budget/pages/autoTransactionsPageNotifications.dart';
 import 'package:budget/pages/activityPage.dart';
 import 'package:budget/pages/editAssociatedTitlesPage.dart';
 import 'package:budget/pages/editBudgetPage.dart';
@@ -507,7 +508,7 @@ class SettingsPageContent extends StatelessWidget {
 
         appStateSettings["emailScanning"]
             ? SettingsContainerOpenPage(
-                openPage: AutoTransactionsPageEmail(),
+                openPage: const AutoTransactionsPageEmail(),
                 title: "auto-email-transactions".tr(),
                 icon: appStateSettings["outlinedIcons"]
                     ? Icons.mark_email_unread_outlined
@@ -519,7 +520,7 @@ class SettingsPageContent extends StatelessWidget {
                 getPlatform(ignoreEmulation: true) == PlatformOS.isAndroid
             ? SettingsContainerOpenPage(
                 title: "Notification Transactions",
-                openPage: AutoTransactionsPageNotifications(),
+                openPage: const AutoTransactionsPageNotifications(),
                 icon: appStateSettings["outlinedIcons"]
                     ? Icons.edit_notifications_outlined
                     : Icons.edit_notifications_rounded,
