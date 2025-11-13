@@ -249,7 +249,7 @@ class _ExchangeRatesState extends State<ExchangeRates> {
                           )
                         : appStateSettings["outlinedIcons"]
                             ? Icons.refresh_outlined
-                            : Icons.refresh_rounded as IconData,
+                            : Icons.refresh_rounded,
                       color: isUpdating 
                           ? Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.5)
                           : Theme.of(context).colorScheme.secondaryContainer,
