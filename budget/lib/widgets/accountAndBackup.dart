@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:budget/colors.dart';
 import 'package:budget/database/generatePreviewData.dart';
 import 'package:budget/database/tables.dart';
-import 'package:budget/firebase_options.dart';
 import 'package:budget/functions.dart';
 import 'package:budget/main.dart';
 import 'package:budget/pages/aboutPage.dart';
@@ -10,7 +9,6 @@ import 'package:budget/pages/accountsPage.dart';
 import 'package:budget/struct/databaseGlobal.dart';
 import 'package:budget/struct/settings.dart';
 import 'package:budget/struct/shareBudget.dart';
-import 'package:budget/struct/syncClient.dart';
 import 'package:budget/widgets/animatedExpanded.dart';
 import 'package:budget/widgets/button.dart';
 import 'package:budget/widgets/exportCSV.dart';
@@ -31,13 +29,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:googleapis/abusiveexperiencereport/v1.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
-import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:googleapis/gmail/v1.dart' as gMail;
-import 'package:google_sign_in/google_sign_in.dart' as signIn;
-import 'package:http/http.dart' as http;
+// http包导入已删除
+// import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
 import 'package:universal_html/html.dart' as html;
 import 'dart:io';
@@ -61,18 +56,23 @@ Future<bool> checkConnection() async {
   return isConnected;
 }
 
-class GoogleAuthClient extends http.BaseClient {
-  final Map<String, String> _headers;
-  final http.Client _client = new http.Client();
-  GoogleAuthClient(this._headers);
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
-    return _client.send(request..headers.addAll(_headers));
-  }
-}
+// GoogleAuthClient类已被禁用
+// class GoogleAuthClient extends http.BaseClient {
+//   final Map<String, String> _headers;
+//   final http.Client _client = new http.Client();
+//   GoogleAuthClient(this._headers);
+//   Future<http.StreamedResponse> send(http.BaseRequest request) {
+//     // 网络请求已被禁用
+//     print("Google认证网络请求已被禁用");
+//     throw Exception("网络请求已被禁用");
+//   }
+// }
 
-signIn.GoogleSignIn? googleSignIn;
-signIn.GoogleSignInAccount? googleUser;
+// Google登录相关变量已删除
+// signIn.GoogleSignIn? googleSignIn;
+// signIn.GoogleSignInAccount? googleUser;
 
+// Google登录功能已禁用
 Future<bool> signInGoogle(
     {BuildContext? context,
     bool? waitForCompletion,
@@ -80,176 +80,39 @@ Future<bool> signInGoogle(
     bool? drivePermissionsAttachments,
     bool? silentSignIn,
     Function()? next}) async {
-  // bool isConnected = false;
   // 内联实现checkLockedFeatureIfInDemoMode功能
   if (appStateSettings["demoMode"] == true) {
-    // unawaited(showPopupMessage(
-    //   context,
-    //   "demo-mode-disabled".tr(),
-    //   null,
-    //   icon: appStateSettings["outlinedIcons"]
-    //       ? Icons.warning_outlined
-    //       : Icons.warning_rounded,
-    // )); // Removed Pro related code
     return false;
   }
   if (appStateSettings["emailScanning"] == false) gMailPermissions = false;
 
-  try {
-    if (gMailPermissions == true &&
-        googleUser != null &&
-        !(await testIfHasGmailAccess())) {
-      await signOutGoogle();
-      googleSignIn = null;
-      settingsPageStateKey.currentState?.refreshState();
-    } else if (googleUser == null) {
-      googleSignIn = null;
-      settingsPageStateKey.currentState?.refreshState();
-    }
-    //Check connection
-    // isConnected = await checkConnection().timeout(Duration(milliseconds: 2500),
-    //     onTimeout: () {
-    //   throw ("There was an error checking your connection");
-    // });
-    // if (isConnected == false) {
-    //   if (context != null) {
-    //     openSnackbar(context, "Could not connect to network",
-    //         backgroundColor: lightenPastel(Theme.of(context).colorScheme.error,
-    //             amount: 0.6));
-    //   }
-    //   return false;
-    // }
-
-    if (waitForCompletion == true && context != null) openLoadingPopup(context);
-    if (googleUser == null) {
-      List<String> scopes = [
-        // See https://github.com/flutter/flutter/issues/155490 and https://github.com/flutter/flutter/issues/155429
-        // Once an account is logged in with these scopes, they are not needed
-        // So we will keep these to apply for all users to prevent errors, especially on silent sign in
-        "https://www.googleapis.com/auth/userinfo.profile",
-        "https://www.googleapis.com/auth/userinfo.email",
-        drive.DriveApi.driveAppdataScope,
-        ...(drivePermissionsAttachments == true
-            ? [drive.DriveApi.driveFileScope]
-            : []),
-        ...(gMailPermissions == true
-            ? [
-                gMail.GmailApi.gmailReadonlyScope,
-                gMail.GmailApi
-                    .gmailModifyScope //We do this so the emails can be marked read
-              ]
-            : [])
-      ];
-      googleSignIn = getPlatform() == PlatformOS.isIOS
-          ? signIn.GoogleSignIn(
-              clientId: DefaultFirebaseOptions.currentPlatform.iosClientId,
-              scopes: scopes)
-          : signIn.GoogleSignIn.standard(scopes: scopes);
-      // googleSignIn?.currentUser?.clearAuthCache();
-
-      final signIn.GoogleSignInAccount? account = silentSignIn == true
-          ?
-          // kIsWeb
-          //     ? await googleSignIn?.signInSilently()
-          // Google Sign-in silent on web no longer gives access to the scopes
-          // https://pub.dev/packages/google_sign_in_web#differences-between-google-identity-services-sdk-and-google-sign-in-for-web-sdk
-          // await googleSignIn?.signInSilently().then((value) async {
-          //     return await googleSignIn?.signIn();
-          //   })
-          // Currently we do not use silent sign in anymore, as it does not allow any access
-          // to GDrive or other tools, so there is no point to get the username/email form silent
-          kIsWeb
-              ? await googleSignIn?.signIn()
-              : await googleSignIn?.signInSilently()
-          : await googleSignIn?.signIn();
-
-      if (account != null) {
-        // print("ACCOUNT");
-        // print(account);
-        googleUser = account;
-        await updateSettings("currentUserEmail", googleUser?.email ?? "",
-            updateGlobalState: false);
-      } else {
-        throw ("Login failed");
-      }
-    }
-    if (waitForCompletion == true && context != null) popRoute(context);
-    if (next != null) next();
-
-    if (appStateSettings["hasSignedIn"] == false) {
-      await updateSettings("hasSignedIn", true, updateGlobalState: false);
-    }
-
-    refreshUIAfterLoginChange();
-    return true;
-  } catch (e) {
-    print(e);
-    if (waitForCompletion == true && context != null) popRoute(context);
-    openSnackbar(
-      SnackbarMessage(
-        title: "sign-in-error".tr(),
-        description: "sign-in-error-description".tr(),
-        icon: appStateSettings["outlinedIcons"]
-            ? Icons.error_outlined
-            : Icons.error_rounded,
-        timeout: Duration(milliseconds: 3400),
-        onTap: () => signInGoogle(
-          context: context,
-          drivePermissionsAttachments: drivePermissionsAttachments,
-          gMailPermissions: gMailPermissions,
-          next: next,
-          silentSignIn: false,
-          waitForCompletion: waitForCompletion,
-        ),
-      ),
-    );
-    googleUser = null;
-    await updateSettings("currentUserEmail", "", updateGlobalState: false);
-    if (runningCloudFunctions) {
-      errorSigningInDuringCloud = true;
-    } else {
-      await updateSettings("hasSignedIn", false, updateGlobalState: false);
-    }
-    refreshUIAfterLoginChange();
-    throw ("Error signing in");
-  }
-}
-
-void refreshUIAfterLoginChange() {
-  sidebarStateKey.currentState?.refreshState();
-  accountsPageStateKey.currentState?.refreshState();
+  // Google登录功能已禁用
+  openSnackbar(
+    SnackbarMessage(
+      title: "功能已禁用".tr(),
+      description: "Google登录和云服务功能已被禁用".tr(),
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.info_outlined
+          : Icons.info_rounded,
+    ),
+  );
+  return false;
 }
 
 Future<bool> testIfHasGmailAccess() async {
-  print("TESTING GMAIL");
-  try {
-    final authHeaders = await googleUser!.authHeaders;
-    final authenticateClient = GoogleAuthClient(authHeaders);
-    gMail.GmailApi gmailApi = gMail.GmailApi(authenticateClient);
-    gMail.ListMessagesResponse results = await gmailApi.users.messages
-        .list(googleUser!.id.toString(), maxResults: 1);
-  } catch (e) {
-    print(e.toString());
-    print("NO GMAIL");
-    return false;
-  }
-  return true;
+  // Gmail访问测试已禁用
+  return false;
 }
 
 Future<bool> signOutGoogle() async {
-  await googleSignIn?.signOut();
-  googleUser = null;
-  await updateSettings("currentUserEmail", "", updateGlobalState: false);
-  await updateSettings("hasSignedIn", false, updateGlobalState: false);
-  refreshUIAfterLoginChange();
-  print("Signedout");
+  // Google登出功能已禁用
+  print("Google登出功能已禁用");
   return true;
 }
 
 Future<bool> refreshGoogleSignIn() async {
-  await signOutGoogle();
-  await signInGoogle(silentSignIn: kIsWeb ? false : true);
-  return true;
+  // Google登录刷新功能已禁用
+  return false;
 }
 
 Future<bool> signInAndSync(BuildContext context,
@@ -403,141 +266,41 @@ Future<void> createBackup(
   bool deleteOldBackups = false,
   String? clientIDForSync,
 }) async {
-  try {
-    if (silentBackup == false || silentBackup == null) {
-      loadingIndeterminateKey.currentState?.setVisibility(true);
-    }
-    await backupSettings();
-  } catch (e) {
-    if (silentBackup == false || silentBackup == null) {
-      maybePopRoute(context);
-    }
+  // 云备份功能已禁用
+  if (silentBackup == false || silentBackup == null) {
     openSnackbar(
       SnackbarMessage(
-          title: e.toString(),
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.error_outlined
-              : Icons.error_rounded),
+        title: "功能已禁用".tr(),
+        description: "云备份功能已被禁用，请使用本地导出功能".tr(),
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.info_outlined
+            : Icons.info_rounded,
+      ),
     );
   }
-
-  try {
-    if (deleteOldBackups)
-      await deleteRecentBackups(context, appStateSettings["backupLimit"],
-          silentDelete: true);
-
-    DBFileInfo currentDBFileInfo = await getCurrentDBFileInfo();
-
-    final authHeaders = await googleUser!.authHeaders;
-    final authenticateClient = GoogleAuthClient(authHeaders);
-    final driveApi = drive.DriveApi(authenticateClient);
-
-    var media = new drive.Media(
-        currentDBFileInfo.mediaStream, currentDBFileInfo.dbFileBytes.length);
-
-    var driveFile = new drive.File();
-    final timestamp =
-        DateFormat("yyyy-MM-dd-hhmmss").format(DateTime.now().toUtc());
-    // -$timestamp
-    driveFile.name =
-        "db-v$schemaVersionGlobal-${getCurrentDeviceName()}.sqlite";
-    if (clientIDForSync != null)
-      driveFile.name =
-          getCurrentDeviceSyncBackupFileName(clientIDForSync: clientIDForSync);
-    driveFile.modifiedTime = DateTime.now().toUtc();
-    driveFile.parents = ["appDataFolder"];
-
-    await driveApi.files.create(driveFile, uploadMedia: media);
-
-    if (clientIDForSync == null)
-      openSnackbar(
-        SnackbarMessage(
-          title: "backup-created".tr(),
-          description: driveFile.name,
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.backup_outlined
-              : Icons.backup_rounded,
-        ),
-      );
-    if (clientIDForSync == null)
-      await updateSettings("lastBackup", DateTime.now().toString(),
-          pagesNeedingRefresh: [], updateGlobalState: false);
-
-    if (silentBackup == false || silentBackup == null) {
-      loadingIndeterminateKey.currentState?.setVisibility(false);
-    }
-  } catch (e) {
-    if (silentBackup == false || silentBackup == null) {
-      loadingIndeterminateKey.currentState?.setVisibility(false);
-    }
-    if (e is DetailedApiRequestError && e.status == 401) {
-      await refreshGoogleSignIn();
-    } else if (e is PlatformException) {
-      await refreshGoogleSignIn();
-    } else {
-      openSnackbar(
-        SnackbarMessage(
-            title: e.toString(),
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.error_outlined
-                : Icons.error_rounded),
-      );
-    }
-  }
+  return;
 }
 
 Future<void> deleteRecentBackups(context, amountToKeep,
     {bool? silentDelete}) async {
-  try {
-    if (silentDelete == false || silentDelete == null) {
-      loadingIndeterminateKey.currentState?.setVisibility(true);
-    }
-
-    final authHeaders = await googleUser!.authHeaders;
-    final authenticateClient = GoogleAuthClient(authHeaders);
-    final driveApi = drive.DriveApi(authenticateClient);
-
-    drive.FileList fileList = await driveApi.files.list(
-      spaces: 'appDataFolder',
-      $fields: 'files(id, name, modifiedTime, size)',
-    );
-    List<drive.File>? files = fileList.files;
-    if (files == null) {
-      throw "No backups found.";
-    }
-
-    int index = 0;
-    files.forEach((file) {
-      // subtract 1 because we just made a backup
-      if (index >= amountToKeep - 1) {
-        // only delete excess backups that don't belong to a client sync
-        if (!isSyncBackupFile(file.name)) deleteBackup(driveApi, file.id ?? "");
-      }
-      if (!isSyncBackupFile(file.name)) index++;
-    });
-    if (silentDelete == false || silentDelete == null) {
-      loadingIndeterminateKey.currentState?.setVisibility(false);
-    }
-  } catch (e) {
-    if (silentDelete == false || silentDelete == null) {
-      loadingIndeterminateKey.currentState?.setVisibility(false);
-    }
+  // 云备份删除功能已禁用
+  if (silentDelete == false || silentDelete == null) {
     openSnackbar(
       SnackbarMessage(
-          title: e.toString(),
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.error_outlined
-              : Icons.error_rounded),
+        title: "功能已禁用".tr(),
+        description: "云备份删除功能已被禁用".tr(),
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.info_outlined
+            : Icons.info_rounded,
+      ),
     );
   }
+  return;
 }
 
 Future<void> deleteBackup(drive.DriveApi driveApi, String fileId) async {
-  try {
-    await driveApi.files.delete(fileId);
-  } catch (e) {
-    openSnackbar(SnackbarMessage(title: e.toString()));
-  }
+  // 云备份删除功能已禁用
+  return;
 }
 
 Future<void> chooseBackup(context,
@@ -567,73 +330,17 @@ Future<void> chooseBackup(context,
 
 Future<void> loadBackup(
     BuildContext context, drive.DriveApi driveApi, drive.File file) async {
-  try {
-    openLoadingPopup(context);
-
-    await cancelAndPreventSyncOperation();
-
-    List<int> dataStore = [];
-    dynamic response = await driveApi.files
-        .get(file.id ?? "", downloadOptions: drive.DownloadOptions.fullMedia);
-    response.stream.listen(
-      (data) {
-        // print("Data: ${data.length}");
-        dataStore.insertAll(dataStore.length, data);
-      },
-      onDone: () async {
-        await overwriteDefaultDB(Uint8List.fromList(dataStore));
-
-        // if this is added, it doesn't restore the database properly on web
-        // await database.close();
-        popRoute(context);
-        await resetLanguageToSystem(context);
-        await updateSettings("databaseJustImported", true,
-            pagesNeedingRefresh: [], updateGlobalState: false);
-        print(appStateSettings);
-        openSnackbar(
-          SnackbarMessage(
-              title: "backup-restored".tr(),
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.settings_backup_restore_outlined
-                  : Icons.settings_backup_restore_rounded),
-        );
-        popRoute(context);
-        restartAppPopup(
-          context,
-          description: kIsWeb
-              ? "refresh-required-to-load-backup".tr()
-              : "restart-required-to-load-backup".tr(),
-          // codeBlock: file.name.toString() +
-          //     (file.modifiedTime == null
-          //         ? ""
-          //         : ("\n" +
-          //             getWordedDateShort(
-          //               file.modifiedTime!,
-          //               showTodayTomorrow: false,
-          //               includeYear: true,
-          //             ))),
-        );
-      },
-      onError: (error) {
-        openSnackbar(
-          SnackbarMessage(
-              title: error.toString(),
-              icon: appStateSettings["outlinedIcons"]
-                  ? Icons.error_outlined
-                  : Icons.error_rounded),
-        );
-      },
-    );
-  } catch (e) {
-    popRoute(context);
-    openSnackbar(
-      SnackbarMessage(
-          title: e.toString(),
-          icon: appStateSettings["outlinedIcons"]
-              ? Icons.error_outlined
-              : Icons.error_rounded),
-    );
-  }
+  // 云备份加载功能已禁用
+  openSnackbar(
+    SnackbarMessage(
+      title: "功能已禁用".tr(),
+      description: "云备份加载功能已被禁用".tr(),
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.info_outlined
+          : Icons.info_rounded,
+    ),
+  );
+  return;
 }
 
 class GoogleAccountLoginButton extends StatefulWidget {
@@ -670,14 +377,15 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
   }
 
   void loginWithSync({VoidCallback? onNext}) {
-    signInAndSync(
-      widget.navigationSidebarButton
-          ? navigatorKey.currentContext ?? context
-          : context,
-      next: () {
-        setState(() {});
-        openPage(onNext: onNext);
-      },
+    // Google登录和同步功能已禁用
+    openSnackbar(
+      SnackbarMessage(
+        title: "功能已禁用".tr(),
+        description: "Google登录和云同步功能已被禁用".tr(),
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.info_outlined
+            : Icons.info_rounded,
+      ),
     );
   }
 
@@ -686,58 +394,63 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
     if (widget.navigationSidebarButton == true) {
       return AnimatedSwitcher(
         duration: Duration(milliseconds: 600),
-        child: googleUser == null
-            ? getPlatform() == PlatformOS.isIOS
-                ? NavigationSidebarButton(
-                    key: ValueKey("login"),
-                    label: "backup".tr(),
-                    icon: MoreIcons.google_drive,
-                    iconScale: 0.87,
-                    onTap: loginWithSync,
-                    isSelected: false,
-                  )
-                : NavigationSidebarButton(
-                    key: ValueKey("login"),
-                    label: "login".tr(),
-                    icon: MoreIcons.google,
-                    onTap: loginWithSync,
-                    isSelected: false,
-                  )
-            : getPlatform() == PlatformOS.isIOS
-                ? NavigationSidebarButton(
-                    key: ValueKey("user"),
-                    label: "backup".tr(),
-                    icon: MoreIcons.google_drive,
-                    iconScale: 0.87,
-                    onTap: openPage,
-                    isSelected: widget.isButtonSelected,
-                  )
-                : NavigationSidebarButton(
-                    key: ValueKey("user"),
-                    label: googleUser!.displayName ?? "",
-                    icon: widget.forceButtonName == null
-                        ? appStateSettings["outlinedIcons"]
-                            ? Icons.person_outlined
-                            : Icons.person_rounded
-                        : MoreIcons.google_drive,
-                    iconScale: widget.forceButtonName == null ? 1 : 0.87,
-                    onTap: openPage,
-                    isSelected: widget.isButtonSelected,
-                  ),
-      );
-    }
-    return googleUser == null
-        ? getPlatform() == PlatformOS.isIOS
-            ? SettingsContainerOpenPage(
-                openPage: AccountsPage(),
-                isOutlined: widget.isOutlinedButton,
-                onTap: (openContainer) {
-                  loginWithSync(onNext: openContainer);
-                },
-                title: widget.forceButtonName ?? "backup".tr(),
+        child: getPlatform() == PlatformOS.isIOS
+            ? NavigationSidebarButton(
+                key: ValueKey("disabled"),
+                label: "备份已禁用".tr(),
                 icon: MoreIcons.google_drive,
                 iconScale: 0.87,
+                onTap: () {
+                  openSnackbar(
+                    SnackbarMessage(
+                      title: "功能已禁用".tr(),
+                      description: "云备份功能已被禁用".tr(),
+                      icon: appStateSettings["outlinedIcons"]
+                          ? Icons.info_outlined
+                          : Icons.info_rounded,
+                    ),
+                  );
+                },
+                isSelected: false,
               )
+            : NavigationSidebarButton(
+                key: ValueKey("disabled"),
+                label: "登录已禁用".tr(),
+                icon: MoreIcons.google,
+                onTap: () {
+                  openSnackbar(
+                    SnackbarMessage(
+                      title: "功能已禁用".tr(),
+                      description: "Google登录功能已被禁用".tr(),
+                      icon: appStateSettings["outlinedIcons"]
+                          ? Icons.info_outlined
+                          : Icons.info_rounded,
+                    ),
+                  );
+                },
+                isSelected: false,
+              ),
+      );
+    }
+    return getPlatform() == PlatformOS.isIOS
+        ? SettingsContainerOpenPage(
+            openPage: AccountsPage(),
+            isOutlined: widget.isOutlinedButton,
+            onTap: (openContainer) {
+              openSnackbar(
+                SnackbarMessage(
+                  title: "功能已禁用".tr(),
+                  description: "云备份功能已被禁用".tr(),
+                  icon: appStateSettings["outlinedIcons"]
+                      ? Icons.info_outlined
+                      : Icons.info_rounded,
+                ),
+              );
+            },
+            title: widget.forceButtonName ?? "备份已禁用".tr(),
+            icon: MoreIcons.google_drive,
+            iconScale: 0.87,
+          )
             : SettingsContainerOpenPage(
                 openPage: AccountsPage(),
                 isOutlined: widget.isOutlinedButton,
@@ -773,32 +486,16 @@ class GoogleAccountLoginButtonState extends State<GoogleAccountLoginButton> {
 }
 
 Future<(drive.DriveApi? driveApi, List<drive.File>?)> getDriveFiles() async {
-  try {
-    final authHeaders = await googleUser!.authHeaders;
-    final authenticateClient = GoogleAuthClient(authHeaders);
-    drive.DriveApi driveApi = drive.DriveApi(authenticateClient);
-
-    drive.FileList fileList = await driveApi.files.list(
-        spaces: 'appDataFolder',
-        $fields: 'files(id, name, modifiedTime, size)');
-    return (driveApi, fileList.files);
-  } catch (e) {
-    if (e is DetailedApiRequestError && e.status == 401) {
-      await refreshGoogleSignIn();
-      return await getDriveFiles();
-    } else if (e is PlatformException) {
-      await refreshGoogleSignIn();
-      return await getDriveFiles();
-    } else {
-      openSnackbar(
-        SnackbarMessage(
-            title: e.toString(),
-            icon: appStateSettings["outlinedIcons"]
-                ? Icons.error_outlined
-                : Icons.error_rounded),
-      );
-    }
-  }
+  // Google Drive功能已禁用
+  openSnackbar(
+    SnackbarMessage(
+      title: "功能已禁用".tr(),
+      description: "Google Drive功能已被禁用".tr(),
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.info_outlined
+          : Icons.info_rounded,
+    ),
+  );
   return (null, null);
 }
 
@@ -821,438 +518,48 @@ class BackupManagement extends StatefulWidget {
 class _BackupManagementState extends State<BackupManagement> {
   List<drive.File> filesState = [];
   List<int> deletedIndices = [];
-  late drive.DriveApi driveApiState;
   UniqueKey dropDownKey = UniqueKey();
-  bool isLoading = true;
-  bool autoBackups = appStateSettings["autoBackups"];
-  bool backupSync = appStateSettings["backupSync"];
+  bool isLoading = false;
+  bool autoBackups = false;
+  bool backupSync = false;
 
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () async {
-      (drive.DriveApi?, List<drive.File>?) result = await getDriveFiles();
-      drive.DriveApi? driveApi = result.$1;
-      List<drive.File>? files = result.$2;
-      if (files == null || driveApi == null) {
-        setState(() {
-          filesState = [];
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          filesState = files;
-          driveApiState = driveApi;
-          isLoading = false;
-        });
-        bottomSheetControllerGlobal.snapToExtent(0);
-      }
-    });
+    // Google Drive功能已禁用，不需要初始化
+    filesState = [];
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.isClientSync) {
-      if (filesState.length > 0) {
-        print(appStateSettings["devicesHaveBeenSynced"]);
-        filesState =
-            filesState.where((file) => isSyncBackupFile(file.name)).toList();
-        updateSettings("devicesHaveBeenSynced", filesState.length,
-            updateGlobalState: false);
-      }
-    } else {
-      if (filesState.length > 0) {
-        filesState =
-            filesState.where((file) => !isSyncBackupFile(file.name)).toList();
-        updateSettings("numBackups", filesState.length,
-            updateGlobalState: false);
-      }
-    }
-    Iterable<MapEntry<int, drive.File>> filesMap = filesState.asMap().entries;
+    // Google Drive功能已禁用
     return PopupFramework(
       title: widget.isClientSync
           ? "devices".tr().capitalizeFirst
           : widget.isManaging
               ? "backups".tr()
               : "restore-a-backup".tr(),
-      subtitle: widget.isClientSync
-          ? "manage-syncing-info".tr()
-          : widget.isManaging
-              ? appStateSettings["backupLimit"].toString() +
-                  " " +
-                  "stored-backups".tr()
-              : "overwrite-warning".tr(),
+      subtitle: "功能已禁用".tr(),
       child: Column(
         children: [
-          widget.isClientSync && kIsWeb == false
-              ? Row(
-                  children: [
-                    Expanded(
-                      child: AboutInfoBox(
-                        title: "web-app".tr(),
-                        link: "https://budget-track.web.app/",
-                        color: appStateSettings["materialYou"]
-                            ? Theme.of(context).colorScheme.secondaryContainer
-                            : getColor(context, "lightDarkAccentHeavyLight"),
-                        padding: EdgeInsetsDirectional.only(
-                          start: 5,
-                          end: 5,
-                          bottom: 10,
-                          top: 5,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : SizedBox.shrink(),
-          widget.isManaging && widget.isClientSync == false
-              ? SettingsContainerSwitch(
-                  enableBorderRadius: true,
-                  onSwitched: (value) async {
-                    await updateSettings("autoBackups", value,
-                        pagesNeedingRefresh: [], updateGlobalState: false);
-                    setState(() {
-                      autoBackups = value;
-                    });
-                  },
-                  initialValue: appStateSettings["autoBackups"],
-                  title: "auto-backups".tr(),
-                  description: "auto-backups-description".tr(),
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.cloud_done_outlined
-                      : Icons.cloud_done_rounded,
-                )
-              : SizedBox.shrink(),
-          widget.isClientSync
-              ? SettingsContainerSwitch(
-                  enableBorderRadius: true,
-                  onSwitched: (value) async {
-                    // Only update global is the sidebar is shown
-                    await updateSettings("backupSync", value,
-                        pagesNeedingRefresh: [], updateGlobalState: false);
-                    sidebarStateKey.currentState?.refreshState();
-                    setState(() {
-                      backupSync = value;
-                    });
-                    // Future.delayed(Duration(milliseconds: 100), () {
-                    //   bottomSheetControllerGlobal.snapToExtent(0);
-                    // });
-                  },
-                  initialValue: appStateSettings["backupSync"],
-                  title: "sync-data".tr(),
-                  description: "sync-data-description".tr(),
-                  icon: appStateSettings["outlinedIcons"]
-                      ? Icons.cloud_sync_outlined
-                      : Icons.cloud_sync_rounded,
-                )
-              : SizedBox.shrink(),
-          // Only allow sync on every change for web
-          // Only on web, disabled automatically in initializeSettings if not web
-          widget.isClientSync && kIsWeb
-              ? AnimatedExpanded(
-                  expand: backupSync,
-                  child: SettingsContainerSwitch(
-                    enableBorderRadius: true,
-                    onSwitched: (value) async {
-                      await updateSettings("syncEveryChange", value,
-                          pagesNeedingRefresh: [], updateGlobalState: false);
-                    },
-                    initialValue: appStateSettings["syncEveryChange"],
-                    title: "sync-every-change".tr(),
-                    descriptionWithValue: (value) {
-                      return value
-                          ? "sync-every-change-description1".tr()
-                          : "sync-every-change-description2".tr();
-                    },
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.all_inbox_outlined
-                        : Icons.all_inbox_rounded,
-                  ),
-                )
-              : SizedBox.shrink(),
-          widget.isManaging && widget.isClientSync == false
-              ? AnimatedExpanded(
-                  expand: autoBackups,
-                  child: SettingsContainerDropdown(
-                    enableBorderRadius: true,
-                    items: ["1", "2", "3", "7", "10", "14"],
-                    onChanged: (value) async {
-                      await updateSettings(
-                          "autoBackupsFrequency", int.parse(value),
-                          pagesNeedingRefresh: [], updateGlobalState: false);
-                    },
-                    initial:
-                        appStateSettings["autoBackupsFrequency"].toString(),
-                    title: "backup-frequency".tr(),
-                    description: "number-of-days".tr(),
-                    icon: appStateSettings["outlinedIcons"]
-                        ? Icons.event_repeat_outlined
-                        : Icons.event_repeat_rounded,
-                  ),
-                )
-              : SizedBox.shrink(),
-          widget.isManaging &&
-                  widget.isClientSync == false &&
-                  appStateSettings["showBackupLimit"]
-              ? SettingsContainerDropdown(
-                  enableBorderRadius: true,
-                  key: dropDownKey,
-                  verticalPadding: 5,
-                  title: "backup-limit".tr(),
-                  icon: Icons.format_list_numbered_rtl_outlined,
-                  initial: appStateSettings["backupLimit"].toString(),
-                  items: ["10", "15", "20", "30"],
-                  onChanged: (value) async {
-                    if (int.parse(value) < appStateSettings["backupLimit"]) {
-                      openPopup(
-                        context,
-                        icon: appStateSettings["outlinedIcons"]
-                            ? Icons.delete_outlined
-                            : Icons.delete_rounded,
-                        title: "change-limit".tr(),
-                        description: "change-limit-warning".tr(),
-                        onSubmit: () async {
-                          await updateSettings("backupLimit", int.parse(value),
-                              updateGlobalState: false);
-                          popRoute(context);
-                        },
-                        onSubmitLabel: "change".tr(),
-                        onCancel: () {
-                          popRoute(context);
-                          setState(() {
-                            dropDownKey = UniqueKey();
-                          });
-                        },
-                        onCancelLabel: "cancel".tr(),
-                      );
-                    } else {
-                      await updateSettings("backupLimit", int.parse(value),
-                          updateGlobalState: false);
-                    }
-                  },
-                )
-              : SizedBox.shrink(),
-          if ((widget.isManaging == false && widget.isClientSync == false) ==
-              false)
-            SizedBox(height: 10),
-          isLoading
-              ? Column(
-                  children: [
-                    for (int i = 0;
-                        i <
-                            (widget.isClientSync
-                                ? appStateSettings["devicesHaveBeenSynced"]
-                                : appStateSettings["numBackups"]);
-                        i++)
-                      LoadingShimmerDriveFiles(
-                          isManaging: widget.isManaging, i: i),
-                  ],
-                )
-              : SizedBox.shrink(),
-          ...filesMap
-              .map(
-                (MapEntry<int, drive.File> file) => AnimatedSizeSwitcher(
-                  child: deletedIndices.contains(file.key)
-                      ? Container(
-                          key: ValueKey(1),
-                        )
-                      : Padding(
-                          padding:
-                              const EdgeInsetsDirectional.only(bottom: 8.0),
-                          child: Tappable(
-                            onTap: () async {
-                              if (!widget.isManaging) {
-                                final result = await openPopup(
-                                  context,
-                                  title: "load-backup".tr(),
-                                  subtitle: getWordedDateShortMore(
-                                        (file.value.modifiedTime ??
-                                                DateTime.now())
-                                            .toLocal(),
-                                        includeTime: true,
-                                        includeYear: true,
-                                        showTodayTomorrow: false,
-                                      ) +
-                                      "\n" +
-                                      getWordedTime(
-                                          navigatorKey.currentContext?.locale
-                                              .toString(),
-                                          (file.value.modifiedTime ??
-                                                  DateTime.now())
-                                              .toLocal()),
-                                  beforeDescriptionWidget: Padding(
-                                    padding: const EdgeInsetsDirectional.only(
-                                      top: 8,
-                                      bottom: 5,
-                                    ),
-                                    child: CodeBlock(
-                                        text: (file.value.name ?? "No name")),
-                                  ),
-                                  description: "load-backup-warning".tr(),
-                                  icon: appStateSettings["outlinedIcons"]
-                                      ? Icons.warning_outlined
-                                      : Icons.warning_rounded,
-                                  onSubmit: () async {
-                                    popRoute(context, true);
-                                  },
-                                  onSubmitLabel: "load".tr(),
-                                  onCancelLabel: "cancel".tr(),
-                                  onCancel: () {
-                                    popRoute(context);
-                                  },
-                                );
-                                if (result == true)
-                                  loadBackup(
-                                      context, driveApiState, file.value);
-                              }
-                              // else {
-                              //   await openPopup(
-                              //     context,
-                              //     title: "Backup Details",
-                              //     description: (file.value.name ?? "") +
-                              //         "\n" +
-                              //         (file.value.size ?? "") +
-                              //         "\n" +
-                              //         (file.value.description ?? ""),
-                              //     icon: appStateSettings["outlinedIcons"] ? Icons.warning_outlined : Icons.warning_rounded,
-                              //     onSubmit: () async {
-                              //       popRoute(context, true);
-                              //     },
-                              //     onSubmitLabel: "Close",
-                              //   );
-                              // }
-                            },
-                            borderRadius: 15,
-                            color: widget.isClientSync &&
-                                    isCurrentDeviceSyncBackupFile(
-                                        file.value.name)
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withOpacity(0.4)
-                                : appStateSettings["materialYou"]
-                                    ? Theme.of(context)
-                                        .colorScheme
-                                        .secondaryContainer
-                                    : getColor(
-                                        context, "lightDarkAccentHeavyLight"),
-                            child: Container(
-                              padding: EdgeInsetsDirectional.symmetric(
-                                  horizontal: 20, vertical: 15),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          widget.isClientSync
-                                              ? appStateSettings[
-                                                      "outlinedIcons"]
-                                                  ? Icons.devices_outlined
-                                                  : Icons.devices_rounded
-                                              : appStateSettings[
-                                                      "outlinedIcons"]
-                                                  ? Icons.description_outlined
-                                                  : Icons.description_rounded,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .secondary,
-                                          size: 30,
-                                        ),
-                                        SizedBox(
-                                            width:
-                                                widget.isClientSync ? 17 : 13),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              TextFont(
-                                                text: getTimeAgo(
-                                                  (file.value.modifiedTime ??
-                                                          DateTime.now())
-                                                      .toLocal(),
-                                                ).capitalizeFirst,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                maxLines: 2,
-                                              ),
-                                              TextFont(
-                                                text: (isSyncBackupFile(
-                                                        file.value.name)
-                                                    ? getDeviceFromSyncBackupFileName(
-                                                            file.value.name) +
-                                                        " " +
-                                                        "sync"
-                                                    : file.value.name ??
-                                                        "No name"),
-                                                fontSize: 14,
-                                                maxLines: 2,
-                                              ),
-                                              // isSyncBackupFile(
-                                              //         file.value.name)
-                                              //     ? Padding(
-                                              //         padding:
-                                              //             const EdgeInsetsDirectional
-                                              //                 .only(top: 3),
-                                              //         child: TextFont(
-                                              //           text:
-                                              //               file.value.name ??
-                                              //                   "",
-                                              //           fontSize: 11,
-                                              //           maxLines: 2,
-                                              //         ),
-                                              //       )
-                                              //     : SizedBox.shrink()
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  widget.isManaging
-                                      ? Row(
-                                          children: [
-                                            widget.hideDownloadButton
-                                                ? SizedBox.shrink()
-                                                : Padding(
-                                                    padding:
-                                                        const EdgeInsetsDirectional
-                                                            .only(
-                                                      start: 8.0,
-                                                    ),
-                                                    child: Builder(
-                                                        builder: (boxContext) {
-                                                      return ButtonIcon(
-                                                        color: appStateSettings[
-                                                                "materialYou"]
-                                                            ? Theme.of(context)
-                                                                .colorScheme
-                                                                .onSecondaryContainer
-                                                                .withOpacity(
-                                                                    0.08)
-                                                            : getColor(context,
-                                                                    "lightDarkAccentHeavy")
-                                                                .withOpacity(
-                                                                    0.7),
-                                                        onTap: () {
-                                                          saveDriveFileToDevice(
-                                                            boxContext:
-                                                                boxContext,
-                                                            driveApi:
-                                                                driveApiState,
-                                                            fileToSave:
-                                                                file.value,
-                                                          );
-                                                        },
-                                                        icon: Icons
-                                                            .download_rounded,
-                                                      );
-                                                    }),
-                                                  ),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsetsDirectional
+          AboutInfoBox(
+            title: "功能已禁用".tr(),
+            description: "Google Drive备份功能已被禁用".tr(),
+            color: appStateSettings["materialYou"]
+                ? Theme.of(context).colorScheme.secondaryContainer
+                : getColor(context, "lightDarkAccentHeavyLight"),
+            padding: EdgeInsetsDirectional.only(
+              start: 5,
+              end: 5,
+              bottom: 10,
+              top: 5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+                (MapEntry<int, drive.File> file) => SizedBox.shrink(),
                                                       .only(start: 5),
                                               child: ButtonIcon(
                                                 color: appStateSettings[
@@ -1514,64 +821,18 @@ class LoadingShimmerDriveFiles extends StatelessWidget {
   }
 }
 
+// Google Drive功能已被禁用 - saveDriveFileToDevice函数已移除
 Future<bool> saveDriveFileToDevice({
   required BuildContext boxContext,
   required drive.DriveApi driveApi,
   required drive.File fileToSave,
 }) async {
-  List<int> dataStore = [];
-  dynamic response = await driveApi.files
-      .get(fileToSave.id!, downloadOptions: drive.DownloadOptions.fullMedia);
-  await for (var data in response.stream) {
-    dataStore.insertAll(dataStore.length, data);
-  }
-  String fileName = "cashew-" +
-      ((fileToSave.name ?? "") +
-              cleanFileNameString(
-                  (fileToSave.modifiedTime ?? DateTime.now()).toString()))
-          .replaceAll(".sqlite", "") +
-      ".sql";
-
-  return await saveFile(
-    boxContext: boxContext,
-    dataStore: dataStore,
-    dataString: null,
-    fileName: fileName,
-    successMessage: "backup-downloaded-success".tr(),
-    errorMessage: "error-downloading".tr(),
-  );
+  print("Google Drive功能已被禁用，无法下载文件");
+  return false;
 }
 
+// Google Drive功能已被禁用 - 备份提醒弹窗已移除
 bool openBackupReminderPopupCheck(BuildContext context) {
-  if ((appStateSettings["currentUserEmail"] == null ||
-          appStateSettings["currentUserEmail"] == "") &&
-      ((appStateSettings["numLogins"] + 1) % 7 == 0) &&
-      appStateSettings["canShowBackupReminderPopup"] == true) {
-    openPopup(
-      context,
-      icon: MoreIcons.google_drive,
-      iconScale: 0.9,
-      title: "backup-your-data-reminder".tr(),
-      description: "backup-your-data-reminder-description".tr() +
-          " " +
-          "google-drive".tr(),
-      onSubmitLabel: "backup".tr().capitalizeFirst,
-      onSubmit: () async {
-        popRoute(context);
-        await signInAndSync(context, next: () {});
-      },
-      onCancelLabel: "never".tr().capitalizeFirst,
-      onCancel: () async {
-        popRoute(context);
-        await updateSettings("canShowBackupReminderPopup", false,
-            updateGlobalState: false);
-      },
-      onExtraLabel: "later".tr().capitalizeFirst,
-      onExtra: () {
-        popRoute(context);
-      },
-    );
-    return true;
-  }
+  // Google Drive功能已被禁用，不再显示备份提醒弹窗
   return false;
 }
