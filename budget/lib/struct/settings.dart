@@ -52,7 +52,7 @@ Future<bool> initializeSettings() async {
         }
       });
       // Always reset the language/locale when restoring a backup
-      userSettings["locale"] = "System";
+      userSettings["locale"] = "zh"; // Changed from "System" to "zh" to ensure Chinese as default
       userSettings["databaseJustImported"] = false;
       print("Settings were restored");
     } catch (e) {
@@ -243,6 +243,12 @@ Future<Map<String, dynamic>> getUserSettings() async {
         userSettingsJSON[key] = userPreferencesDefault[key];
       }
     });
+    
+    // Ensure default language is Chinese if not set or if it's System
+    if (userSettingsJSON["locale"] == null || userSettingsJSON["locale"] == "System") {
+      userSettingsJSON["locale"] = "zh";
+    }
+    
     return userSettingsJSON;
   } catch (e) {
     print("There was an error, settings corrupted: " + e.toString());
