@@ -15,6 +15,7 @@ import 'package:budget/widgets/selectAmount.dart';
 import 'package:budget/widgets/tappable.dart';
 import 'package:budget/widgets/textInput.dart';
 import 'package:budget/widgets/textWidgets.dart';
+import 'package:budget/widgets/toggle.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:budget/main.dart';
@@ -31,6 +32,37 @@ class ExchangeRates extends StatefulWidget {
 
 class _ExchangeRatesState extends State<ExchangeRates> {
   String searchCurrenciesText = "";
+  bool isUpdating = false;
+
+  Future<void> updateExchangeRates() async {
+    setState(() {
+      isUpdating = true;
+    });
+    
+    bool success = await getExchangeRates(forceUpdate: true);
+    
+    setState(() {
+      isUpdating = false;
+    });
+    
+    if (success) {
+      showPopupMessage(
+        context,
+        "汇率更新成功",
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.check_circle_outline
+            : Icons.check_circle_rounded,
+      );
+    } else {
+      showPopupMessage(
+        context,
+        "汇率更新失败，请检查网络连接",
+        icon: appStateSettings["outlinedIcons"]
+            ? Icons.error_outline
+            : Icons.error_rounded,
+      );
+    }
+  }
 
   Future addCustomCurrency(String customKey) async {
     List<dynamic> customCurrencies = appStateSettings["customCurrencies"];
@@ -146,6 +178,60 @@ class _ExchangeRatesState extends State<ExchangeRates> {
           child: AboutInfoBox(
             title: "exchange-rates-api".tr(),
             link: "https://github.com/fawazahmed0/exchange-api",
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsetsDirectional.symmetric(horizontal: 20, vertical: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 自动更新汇率开关
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: TextFont(
+                        text: "自动更新汇率",
+                        fontSize: 16,
+                      ),
+                    ),
+                    ToggleSwitch(
+                      value: appStateSettings["autoUpdateExchangeRates"] ?? true,
+                      onChanged: (value) {
+                        updateSettings("autoUpdateExchangeRates", value, updateGlobalState: false);
+                      },
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10),
+                // 上次更新时间
+                if (appStateSettings["lastExchangeRateUpdate"] != null)
+                  TextFont(
+                    text: "上次更新: " + DateTime.parse(appStateSettings["lastExchangeRateUpdate"]).toString().substring(0, 19),
+                    fontSize: 12,
+                    textColor: getColor(context, "textLight"),
+                  ),
+                SizedBox(height: 10),
+                // 手动更新按钮
+                ButtonIcon(
+                  onTap: isUpdating ? null : updateExchangeRates,
+                  label: isUpdating ? "更新中..." : "立即更新汇率",
+                  icon: isUpdating 
+                    ? SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: getColor(context, "black"),
+                        ),
+                      )
+                    : appStateSettings["outlinedIcons"]
+                        ? Icons.refresh_outlined
+                        : Icons.refresh_rounded,
+                ),
+              ],
+            ),
           ),
         ),
         SliverToBoxAdapter(
