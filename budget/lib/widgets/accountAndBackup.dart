@@ -81,7 +81,18 @@ Future<bool> signInGoogle(
     bool? silentSignIn,
     Function()? next}) async {
   // bool isConnected = false;
-  if (await checkLockedFeatureIfInDemoMode(context) == false) return false;
+  // 内联实现checkLockedFeatureIfInDemoMode功能
+  if (appStateSettings["demoMode"] == true) {
+    unawaited(showPopupMessage(
+      context,
+      "demo-mode-disabled".tr(),
+      null,
+      icon: appStateSettings["outlinedIcons"]
+          ? Icons.warning_outlined
+          : Icons.warning_rounded,
+    ));
+    return false;
+  }
   if (appStateSettings["emailScanning"] == false) gMailPermissions = false;
 
   try {
