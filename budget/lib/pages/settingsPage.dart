@@ -8,6 +8,7 @@ import 'package:budget/pages/creditDebtTransactionsPage.dart';
 import 'package:budget/pages/editHomePage.dart';
 import 'package:budget/pages/editObjectivesPage.dart';
 import 'package:budget/pages/homePage/homePageNetWorth.dart';
+import 'package:budget/pages/habitsPage.dart';
 import 'package:budget/pages/objectivesListPage.dart';
 import 'package:budget/pages/transactionsListPage.dart';
 import 'package:budget/pages/upcomingOverdueTransactionsPage.dart';
@@ -228,6 +229,26 @@ class MorePages extends StatelessWidget {
                     icon: navBarIconsData["loans"]!.iconData,
                     isOutlined: true,
                   ),
+                ),
+              ],
+            ),
+          if (hasSideNavigation == false)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Expanded(
+                  child: SettingsContainerOpenPage(
+                    openPage: HabitsPage(),
+                    title: navBarIconsData["habits"]!.label.tr(),
+                    icon: navBarIconsData["habits"]!.iconData,
+                    description: appStateSettings["showExtraInfoText"] == false
+                        ? null
+                        : "habits-tracking-description".tr(),
+                    isOutlined: true,
+                  ),
+                ),
+                Expanded(
+                  child: SizedBox.shrink(), // 占位，保持布局对称
                 ),
               ],
             ),
