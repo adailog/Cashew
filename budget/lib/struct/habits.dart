@@ -251,10 +251,10 @@ class HabitsDatabaseHelper {
     // 获取最近的打卡记录
     final List<Map<String, dynamic>> maps = await database.customSelect(
       '''SELECT date FROM habit_records 
-         WHERE habit_fk = :habitPk AND value >= 1.0 
+         WHERE habit_fk = ? AND value >= 1.0 
          ORDER BY date DESC 
          LIMIT 100''',
-      variables: [drift.Variable.withString(habitPk)],
+      variables: [habitPk],
       readsFrom: {database.habitRecords},
     ).get();
     
@@ -308,9 +308,9 @@ class HabitsDatabaseHelper {
     // 获取所有打卡记录
     final List<Map<String, dynamic>> maps = await database.customSelect(
       '''SELECT date FROM habit_records 
-         WHERE habit_fk = :habitPk AND value >= 1.0 
+         WHERE habit_fk = ? AND value >= 1.0 
          ORDER BY date ASC''',
-      variables: [drift.Variable.withString(habitPk)],
+      variables: [habitPk],
       readsFrom: {database.habitRecords},
     ).get();
     
@@ -351,14 +351,14 @@ class HabitsDatabaseHelper {
     
     final List<Map<String, dynamic>> maps = await database.customSelect(
       '''SELECT date, COUNT(*) as count FROM habit_records 
-         WHERE habit_fk = :habitPk AND value >= 1.0 
-         AND date >= :startDate AND date <= :endDate
+         WHERE habit_fk = ? AND value >= 1.0 
+         AND date >= ? AND date <= ?
          GROUP BY date
          ORDER BY date ASC''',
       variables: [
-        drift.Variable.withString(habitPk),
-        drift.Variable.withDateTime(startDate),
-        drift.Variable.withDateTime(endDate),
+        habitPk,
+        startDate.toIso8601String(),
+        endDate.toIso8601String(),
       ],
       readsFrom: {database.habitRecords},
     ).get();
