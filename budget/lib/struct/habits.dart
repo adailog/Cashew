@@ -86,7 +86,7 @@ class HabitsDatabaseHelper {
   
   // 获取所有习惯
   static Future<List<Habit>> getAllHabits() async {
-    return await databaseInstance.database.allHabits;
+    return await database.allHabits;
   }
   
   // 获取所有习惯（包含记录）
@@ -107,7 +107,7 @@ class HabitsDatabaseHelper {
   
   // 获取习惯记录
   static Future<List<HabitRecord>> getHabitRecords(String habitPk) async {
-    final query = databaseInstance.database.select(databaseInstance.database.habitRecords)
+    final query = database.select(database.habitRecords)
       ..where((record) => record.habitFk.equals(habitPk))
       ..orderBy([(record) => drift.OrderingTerm.desc(record.date)]);
     
@@ -139,29 +139,29 @@ class HabitsDatabaseHelper {
       frequency: frequency,
       type: type,
       targetType: targetType,
-      targetValue: targetValue,
+      targetValue: drift.Value(targetValue),
       unit: drift.Value(unit),
       order: order,
     );
     
-    final habitPk = await databaseInstance.database.into(databaseInstance.database.habits).insert(habit);
-    return await (databaseInstance.database.select(databaseInstance.database.habits)
+    final habitPk = await database.into(database.habits).insert(habit);
+    return await (database.select(database.habits)
       ..where((h) => h.habitPk.equals(habitPk))).getSingle();
   }
   
   // 更新习惯
   static Future<void> updateHabit(Habit habit) async {
-    await databaseInstance.database.update(databaseInstance.database.habits).replace(habit);
+    await database.update(database.habits).replace(habit);
   }
   
   // 删除习惯
   static Future<void> deleteHabit(String habitPk) async {
     // 先删除相关记录
-    await (databaseInstance.database.delete(databaseInstance.database.habitRecords)
+    await (database.delete(database.habitRecords)
       ..where((record) => record.habitFk.equals(habitPk))).go();
     
     // 删除习惯
-    await (databaseInstance.database.delete(databaseInstance.database.habits)
+    await (database.delete(database.habits)
       ..where((habit) => habit.habitPk.equals(habitPk))).go();
   }
   
@@ -173,7 +173,7 @@ class HabitsDatabaseHelper {
     String? note,
   }) async {
     // 先检查是否已有该日期的记录
-    final existingQuery = databaseInstance.database.select(databaseInstance.database.habitRecords)
+    final existingQuery = database.select(database.habitRecords)
       ..where((record) => record.habitFk.equals(habitFk))
       ..where((record) => record.date.equals(date));
     
@@ -182,36 +182,36 @@ class HabitsDatabaseHelper {
     if (existing.isNotEmpty) {
       // 更新现有记录
       final updatedRecord = existing.first.copyWith(
-        value: value,
+        value: drift.Value(value),
         note: drift.Value(note),
         dateTimeModified: DateTime.now(),
       );
-      await databaseInstance.database.update(databaseInstance.database.habitRecords).replace(updatedRecord);
+      await database.update(database.habitRecords).replace(updatedRecord);
       return updatedRecord;
     } else {
       // 创建新记录
       final record = HabitRecordsCompanion.insert(
         habitFk: habitFk,
         date: date,
-        value: value,
+        value: drift.Value(value),
         note: drift.Value(note),
       );
       
-      final recordPk = await databaseInstance.database.into(databaseInstance.database.habitRecords).insert(record);
-      return await (databaseInstance.database.select(databaseInstance.database.habitRecords)
+      final recordPk = await database.into(database.habitRecords).insert(record);
+      return await (database.select(database.habitRecords)
         ..where((r) => r.recordPk.equals(recordPk))).getSingle();
     }
   }
   
   // 删除习惯记录
   static Future<void> deleteHabitRecord(String recordPk) async {
-    await (databaseInstance.database.delete(databaseInstance.database.habitRecords)
+    await (database.delete(database.habitRecords)
       ..where((record) => record.recordPk.equals(recordPk))).go();
   }
   
   // 获取指定日期的习惯记录
   static Future<HabitRecord?> getHabitRecordForDate(String habitFk, DateTime date) async {
-    final query = databaseInstance.database.select(databaseInstance.database.habitRecords)
+    final query = database.select(database.habitRecords)
       ..where((record) => record.habitFk.equals(habitFk))
       ..where((record) => record.date.equals(date));
     
@@ -248,15 +248,13 @@ class HabitsDatabaseHelper {
 
   // 获取当前连续打卡天数
   static Future<int> getCurrentStreak(String habitPk) async {
-    final database = databaseInstance.database;
-    
     // 获取最近的打卡记录
     final List<Map<String, dynamic>> maps = await database.customSelect(
       '''SELECT date FROM habit_records 
          WHERE habit_fk = :habitPk AND value >= 1.0 
          ORDER BY date DESC 
          LIMIT 100''',
-      variables: drift.Variables({'habitPk': habitPk}),
+      variables: [drift.Variable.withString(habitPk)],
       readsFrom: {database.habitRecords},
     ).get();
     
@@ -307,14 +305,12 @@ class HabitsDatabaseHelper {
 
   // 获取最长连续打卡天数
   static Future<int> getLongestStreak(String habitPk) async {
-    final database = databaseInstance.database;
-    
     // 获取所有打卡记录
     final List<Map<String, dynamic>> maps = await database.customSelect(
       '''SELECT date FROM habit_records 
          WHERE habit_fk = :habitPk AND value >= 1.0 
          ORDER BY date ASC''',
-      variables: drift.Variables({'habitPk': habitPk}),
+      variables: [drift.Variable.withString(habitPk)],
       readsFrom: {database.habitRecords},
     ).get();
     
@@ -349,8 +345,6 @@ class HabitsDatabaseHelper {
 
   // 获取每周完成情况
   static Future<Map<String, int>> getWeeklyCompletion(String habitPk) async {
-    final database = databaseInstance.database;
-    
     // 获取最近7天的打卡记录
     final endDate = DateTime.now();
     final startDate = endDate.subtract(const Duration(days: 7));
@@ -361,11 +355,11 @@ class HabitsDatabaseHelper {
          AND date >= :startDate AND date <= :endDate
          GROUP BY date
          ORDER BY date ASC''',
-      variables: drift.Variables({
-        'habitPk': habitPk,
-        'startDate': startDate.toIso8601String(),
-        'endDate': endDate.toIso8601String(),
-      }),
+      variables: [
+        drift.Variable.withString(habitPk),
+        drift.Variable.withDateTime(startDate),
+        drift.Variable.withDateTime(endDate),
+      ],
       readsFrom: {database.habitRecords},
     ).get();
     
