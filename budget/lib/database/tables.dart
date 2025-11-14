@@ -59,6 +59,23 @@ enum SharedOwnerMember {
   member,
 }
 
+// 习惯打卡相关枚举
+enum HabitFrequency {
+  daily,
+  weekly,
+  monthly,
+}
+
+enum HabitType {
+  yesNo,     // 是/否类型习惯
+  numerical, // 数值类型习惯
+}
+
+enum HabitTargetType {
+  atLeast,   // 至少
+  atMost,    // 至多
+}
+
 enum ExpenseIncome {
   income,
   expense,
@@ -538,6 +555,44 @@ class Objectives extends Table {
   Set<Column> get primaryKey => {objectivePk};
 }
 
+// 习惯打卡相关表
+@DataClassName('Habit')
+class Habits extends Table {
+  TextColumn get habitPk => text().clientDefault(() => uuid.v4())();
+  TextColumn get name => text().withLength(max: NAME_LIMIT)();
+  TextColumn get description => text().withLength(max: NOTE_LIMIT)();
+  TextColumn get question => text().withLength(max: NAME_LIMIT)(); // 习惯问题，如"今天喝水了吗？"
+  TextColumn get colour => text().withLength(max: COLOUR_LIMIT).nullable()();
+  TextColumn get iconName => text().nullable()();
+  TextColumn get emojiIconName => text().nullable()();
+  IntColumn get frequency => intEnum<HabitFrequency>().withDefault(Constant(HabitFrequency.daily.index))();
+  IntColumn get type => intEnum<HabitType>().withDefault(Constant(HabitType.yesNo.index))();
+  IntColumn get targetType => intEnum<HabitTargetType>().withDefault(Constant(HabitTargetType.atLeast.index))();
+  RealColumn get targetValue => real().withDefault(Constant(0.0))(); // 数值类型习惯的目标值
+  TextColumn get unit => text().withLength(max: 50).nullable()(); // 数值单位，如"杯"、"公里"等
+  IntColumn get order => integer()();
+  BoolColumn get archived => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get dateCreated => dateTime().clientDefault(() => new DateTime.now())();
+  DateTimeColumn get dateTimeModified => dateTime().withDefault(Constant(DateTime.now())).nullable()();
+
+  @override
+  Set<Column> get primaryKey => {habitPk};
+}
+
+@DataClassName('HabitRecord')
+class HabitRecords extends Table {
+  TextColumn get recordPk => text().clientDefault(() => uuid.v4())();
+  TextColumn get habitFk => text().references(Habits, #habitPk)();
+  DateTimeColumn get date => dateTime()(); // 打卡日期
+  RealColumn get value => real().withDefault(Constant(0.0))(); // 打卡值，对于yes/no类型，0表示否，1表示是
+  TextColumn get note => text().withLength(max: NOTE_LIMIT).nullable()(); // 打卡备注
+  DateTimeColumn get dateCreated => dateTime().clientDefault(() => new DateTime.now())();
+  DateTimeColumn get dateTimeModified => dateTime().withDefault(Constant(DateTime.now())).nullable()();
+
+  @override
+  Set<Column> get primaryKey => {recordPk};
+}
+
 class TransactionWithCategory {
   final TransactionCategory category;
   final Transaction transaction;
@@ -688,6 +743,8 @@ class CategoryWithTotal {
   ScannerTemplates,
   DeleteLogs,
   Objectives,
+  Habits,
+  HabitRecords,
 ])
 class FinanceDatabase extends _$FinanceDatabase {
   // FinanceDatabase() : super(_openConnection());
